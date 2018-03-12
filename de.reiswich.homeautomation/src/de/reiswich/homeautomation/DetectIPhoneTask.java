@@ -1,0 +1,114 @@
+package de.reiswich.homeautomation;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TimerTask;
+
+import org.apache.log4j.Logger;
+
+/**
+ * Ping the iPhone each x minutes. After it finds the iPhone, observers are
+ * informed.
+ * 
+ * @author ereiswich
+ * 
+ */
+public class DetectIPhoneTask extends TimerTask {
+	private Logger logger = Logger.getLogger(DetectIPhoneTask.class.getName());
+
+	private Set<IPhoneObserver> iPhoneObserver = new HashSet<IPhoneObserver>();
+
+	private Properties _mobileDevices;
+
+	public DetectIPhoneTask(Properties mobileDevices) {
+		_mobileDevices = mobileDevices;
+	}
+
+	protected void addIPhoneObserver(IPhoneObserver observer) {
+		iPhoneObserver.add(observer);
+	}
+
+	@Override
+	public void run() {
+		List<Boolean> pingResults = new ArrayList<>();
+		for (Entry<Object, Object> deviceKeySet : _mobileDevices.entrySet()) {
+			boolean pingResult = pingMobileDevice((String)deviceKeySet.getKey(), (String)deviceKeySet.getValue());
+			pingResults.add(pingResult);
+		}
+
+		boolean iPhoneDetected = false;
+		for (Boolean pingResult : pingResults) {
+			if(pingResult == true){
+				iPhoneDetected = true;
+			}
+		}
+		
+		if(iPhoneDetected){
+			handleIPhoneOnline();
+		}else{
+			handleIPhoneOffline();
+		}
+	}
+
+	private boolean pingMobileDevice(String mobileDeviceOwner, String deviceMacAdress) {
+		boolean pingResult = false;
+		try {
+			// Bluetooth-MAC-Adresse ist die richtige
+			String pingString = "sudo l2ping -c 1 " + deviceMacAdress;
+			Process process = Runtime.getRuntime().exec(pingString);
+			process.waitFor();
+			InputStream in = process.getInputStream();
+			InputStreamReader inReader = new InputStreamReader(in);
+			BufferedReader bufReader = new BufferedReader(inReader);
+
+			// erste Zeile langt, um zu erkennen, ob iPhone online oder offline
+			// ist
+			String line = bufReader.readLine();
+			if (line != null) {
+				if (line.startsWith("Ping: " + deviceMacAdress)) {
+					logger.debug("... scanning: " + mobileDeviceOwner + " iPhone detected");
+					pingResult = true;
+				} else if (line.startsWith("Can't connect")) {
+					logger.debug("... scanning: " + mobileDeviceOwner + " iPhone not found");
+					pingResult = false;
+				}
+			} else {
+				logger.debug("Ping return line is null");
+				pingResult = false;
+			}
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			logger.error(e.getMessage());
+			e.printStackTrace();
+		}
+		return pingResult;
+	}
+
+	private void handleIPhoneOnline() {
+		for (IPhoneObserver observer : iPhoneObserver) {
+			logger.debug("Inform observer iPhone found: " + observer.toString());
+			observer.iPhoneDetected();
+		}
+	}
+
+	private void handleIPhoneOffline() {
+		for (IPhoneObserver observer : iPhoneObserver) {
+			observer.iPhoneOffline();
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "Detect iPhone scanner task";
+	}
+}
