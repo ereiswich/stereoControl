@@ -1,9 +1,0 @@
-Manifest-Version: 1.0
-Bundle-ManifestVersion: 2
-Bundle-Name: Json-simple
-Bundle-SymbolicName: de.reiswich.homeautomation.lib.json-simple
-Bundle-Version: 1.0.0
-Bundle-ClassPath: json-simple-1.1.1.jar
-Export-Package: org.json.simple,
- org.json.simple.parser
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
