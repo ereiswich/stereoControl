@@ -1,11 +1,12 @@
 # Compiled class file
 *.class
 
-# Classpath
+# Eclipse Settings
 /target/
 /.classpath
-*.settings
-*.project
+/*.project
+/.settings
+/*.springBeans
 
 # Log file
 *.log
