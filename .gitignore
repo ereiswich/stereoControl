@@ -4,6 +4,7 @@
 # Classpath
 /target/
 /.classpath
+*.settings
 
 # Log file
 *.log
