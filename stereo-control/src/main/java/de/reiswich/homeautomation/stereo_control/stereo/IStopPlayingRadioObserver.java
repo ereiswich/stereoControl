@@ -1,4 +1,4 @@
-package de.reiswich.homeautomation.stereo_control.avr;
+package de.reiswich.homeautomation.stereo_control.stereo;
 
 public interface IStopPlayingRadioObserver {
 

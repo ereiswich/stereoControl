@@ -9,13 +9,13 @@ import java.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.reiswich.homeautomation.stereo_control.avr.AVRActiveSource;
-import de.reiswich.homeautomation.stereo_control.avr.IStopPlayingRadioObserver;
-import de.reiswich.homeautomation.stereo_control.avr.MPCRadioPlayer;
-import de.reiswich.homeautomation.stereo_control.avr.StopRadioPlayingTask;
 import de.reiswich.homeautomation.stereo_control.light.LightSwitch;
 import de.reiswich.homeautomation.stereo_control.scanning.DetectIPhoneTask;
 import de.reiswich.homeautomation.stereo_control.scanning.IPhoneObserver;
+import de.reiswich.homeautomation.stereo_control.stereo.AVRActiveSource;
+import de.reiswich.homeautomation.stereo_control.stereo.IStopPlayingRadioObserver;
+import de.reiswich.homeautomation.stereo_control.stereo.MPCRadioPlayer;
+import de.reiswich.homeautomation.stereo_control.stereo.StopRadioPlayingTask;
 
 public class RadioController implements IPhoneObserver {
 	private Logger logger = LoggerFactory.getLogger(RadioController.class.getName());
