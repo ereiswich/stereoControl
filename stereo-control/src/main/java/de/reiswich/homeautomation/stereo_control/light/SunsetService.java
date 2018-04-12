@@ -7,12 +7,16 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -67,12 +71,16 @@ public class SunsetService {
 		JSONObject sunsetObj = (JSONObject)parser.parse(new InputStreamReader(jsonSunsetTime, "UTF-8"));
 
 		JSONObject result = (JSONObject) sunsetObj.get("results");
-		String sunsetTime = (String)result.get("sunset");
+		String sunsetTimeString = (String)result.get("sunset");
 		
 		DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+		LocalDateTime sunsetTime = LocalDateTime.parse(sunsetTimeString, formatter);
+
+		ZoneId berlin = ZoneId.of("Europe/Berlin");
 		
-		LocalTime time = LocalTime.parse(sunsetTime, formatter);
-		return time;
+		ZonedDateTime berlinDateTime = ZonedDateTime.of(sunsetTime, berlin);
+				
+		return berlinDateTime.toLocalTime();
 	}
 
 	private InputStream connectToSunsetService() throws MalformedURLException, IOException {

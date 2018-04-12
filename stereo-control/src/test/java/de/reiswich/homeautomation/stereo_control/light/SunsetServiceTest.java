@@ -1,6 +1,7 @@
 package de.reiswich.homeautomation.stereo_control.light;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,6 +33,17 @@ public class SunsetServiceTest {
 
 		// Assert
 		assertEquals(sunsetURL, url);
+	}
+	
+	@Test
+	public void getSunsetTimeTest() {
+		// Arrange
+		
+		// Act
+		LocalTime sunsetTime = sunsetService.getSunsetTime();
+		
+		// Assert
+		assertNotNull(sunsetTime);
 	}
 
 	@Test
