@@ -35,3 +35,11 @@ stereo-control/.project
 stereo-control/.settings/org.eclipse.core.resources.prefs
 
 *.prefs
+
+stereo-control/.settings/org.eclipse.wst.common.project.facet.core.xml
+
+stereo-control/target/classes/META-INF/MANIFEST.MF
+
+stereo-control/target/classes/META-INF/maven/de.reiswich.homeautomation/stereo-control/pom.properties
+
+stereo-control/target/classes/META-INF/maven/de.reiswich.homeautomation/stereo-control/pom.xml
