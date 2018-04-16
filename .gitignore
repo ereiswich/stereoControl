@@ -37,3 +37,5 @@ stereo-control/.settings/
 *.prefs
 
 stereo-control/target/
+
+stereo-control/target/classes/META-INF/MANIFEST.MF
