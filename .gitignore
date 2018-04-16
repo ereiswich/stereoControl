@@ -32,8 +32,8 @@ stereo-control/.classpath
 
 stereo-control/.project
 
-stereo-control/.settings/*
+stereo-control/.settings/
 
 *.prefs
 
-stereo-control/target/*
+stereo-control/target/
