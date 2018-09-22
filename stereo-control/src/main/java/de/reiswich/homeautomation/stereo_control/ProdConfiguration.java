@@ -57,12 +57,11 @@ public class ProdConfiguration {
 		logger.debug("Trying to read MobileDevice-Properties");
 		Properties movileDevicesProps = new Properties();
 		try {
-			Resource resource = resourceLoader.getResource("classpath:mobileDevices.properties");
 			/*
 			 * um an Daten innerhalb eines JARs zu kommen, muss man den InputStream laden,
 			 * nicht getFile() benutzen, da diese auf das Dateisystem geht
 			 */
-			InputStream stream = resource.getInputStream();
+			InputStream stream = new FileInputStream("./config/mobileDevices.properties");
 			movileDevicesProps.load(stream);
 			logger.debug("Loaded " + movileDevicesProps.entrySet().size() + " MobileDevices from properties");
 		} catch (IOException e) {

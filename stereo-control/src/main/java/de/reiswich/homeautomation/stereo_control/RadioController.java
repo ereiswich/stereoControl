@@ -26,7 +26,7 @@ public class RadioController implements IPhoneObserver {
 	private DetectIPhoneTask _scanIPhoneTask;
 
 	private DetectIPhoneTask _restartIPhoneScannerTask;
-	
+
 	private Properties _mobileDevices;
 
 	private LightSwitch _lightSwitch;
@@ -103,9 +103,9 @@ public class RadioController implements IPhoneObserver {
 	 */
 	private void initStopPlayingTask() {
 		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask();
-		int minutesForRestart = 60;
+		int minutesForRestart = 90;
 		_scanIPhoneTimer.schedule(stopRadioPlaying, minutesForRestart * 60 * 1000); // 60 Min.
-		logger.info("Stop playing radio timer initialized after 60 Min.");
+		logger.info("Stop playing radio timer initialized after " + minutesForRestart + " Min.");
 
 		stopRadioPlaying.addObserver(new IStopPlayingRadioObserver() {
 			@Override
@@ -135,8 +135,8 @@ public class RadioController implements IPhoneObserver {
 				pingFailedCounter++;
 				logger.info("iPhone connection lost. Setting ping failed counter to: " + pingFailedCounter);
 				/*
-				 * Ping may fail. Don't restart iPhone scanner immediately. Failing e.g. ten times
-				 * is more unlikely, thus iPhone is truly out of range.
+				 * Ping may fail. Don't restart iPhone scanner immediately. Failing e.g. ten
+				 * times is more unlikely, thus iPhone is truly out of range.
 				 */
 				if (pingFailedCounter >= 10) {
 					logger.info(
@@ -172,10 +172,10 @@ public class RadioController implements IPhoneObserver {
 		// 24 hour clock
 		int hour = cal.get(Calendar.HOUR_OF_DAY);
 		// don't play at night
-		if (24 >= hour && hour >= 10) {
+		if (hour <= 22 && hour >= 11) {
 			timeToPlay = true;
 		}
-		logger.debug("Time to play music: " + timeToPlay + "\t -> (24 >= hour && hour >= 10)");
+		logger.debug("Time to play music: " + timeToPlay + "\t -> (hour <= 22 && hour >= 10)");
 		return timeToPlay;
 	}
 }
