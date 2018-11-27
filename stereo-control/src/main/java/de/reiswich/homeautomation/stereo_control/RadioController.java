@@ -172,10 +172,10 @@ public class RadioController implements IPhoneObserver {
 		// 24 hour clock
 		int hour = cal.get(Calendar.HOUR_OF_DAY);
 		// don't play at night
-		if (hour <= 22 && hour >= 11) {
+		if ( hour >= 11 && hour < 22) {
 			timeToPlay = true;
 		}
-		logger.debug("Time to play music: " + timeToPlay + "\t -> (hour <= 22 && hour >= 10)");
+		logger.debug("Time to play music: " + timeToPlay + "\t -> (hour >= 11 && hour < 22)");
 		return timeToPlay;
 	}
 }
