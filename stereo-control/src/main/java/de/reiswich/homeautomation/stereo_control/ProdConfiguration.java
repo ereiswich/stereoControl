@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
 import de.reiswich.homeautomation.stereo_control.light.LightSwitch;
-import de.reiswich.homeautomation.stereo_control.light.SunsetService;
 
 @Configuration
 public class ProdConfiguration {
@@ -33,16 +32,11 @@ public class ProdConfiguration {
 		return radioController;
 	}
 
-	@Bean
-	public SunsetService getSunsetService() {
-		logger.debug("initializing SunsetService");
-		return new SunsetService();
-	}
 
 	@Bean
 	public LightSwitch getLightSwitch() {
 		logger.debug("initializing LightSwitch");
-		return new LightSwitch(getSunsetService());
+		return new LightSwitch();
 	}
 
 	private Properties getMobileDevicesProperties() {

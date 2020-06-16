@@ -1,6 +1,10 @@
 package de.reiswich.homeautomation.stereo_control.light;
 
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Locale;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,14 +12,12 @@ import org.slf4j.LoggerFactory;
 public class LightSwitch {
 
 	Logger logger = LoggerFactory.getLogger(LightSwitch.class.getName());
-	private SunsetService sunsetService;
 	
-	public LightSwitch(SunsetService sunsetService) {
-		this.sunsetService = sunsetService;
+	public LightSwitch() {
 	}
 
 	public void switchOnLights() {
-		if (sunsetService.isTimeToSwitchOnLights()) {
+		if (isTimeToSwitchOnLights()) {
 			logger.debug("Time to swith on lights = true");
 			try {
 				Runtime runtime = Runtime.getRuntime();
@@ -33,6 +35,22 @@ public class LightSwitch {
 			}
 		} else {
 			logger.debug("Time to swith on lights = false");
+		}
+	}
+	
+	public boolean isTimeToSwitchOnLights() {
+		Calendar calendar = new GregorianCalendar(Locale.GERMAN);
+		calendar.setTime(new Date());
+		boolean sommerzeit = calendar.getTimeZone().useDaylightTime();
+
+		int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
+		if (sommerzeit) {
+			logger.info("Es ist Sommerzeit. Nach 20 Uhr Licht einschalten.");
+			// im sommer erst ab ca. 20 Uhr einschalten
+			return hourOfDay >= 20;
+		} else {
+			logger.info("Es ist Winterzeit. Nach 18 Uhr Licht einschalten.");
+			return hourOfDay >= 18;
 		}
 	}
 }

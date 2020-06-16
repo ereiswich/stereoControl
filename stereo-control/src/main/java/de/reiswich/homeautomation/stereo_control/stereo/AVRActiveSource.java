@@ -21,7 +21,7 @@ public class AVRActiveSource {
 			Process p = r.exec("python /home/pi/projects/radioplay/ActiveSourceCommand.py");
 			p.waitFor();
 
-			logger.info("Active Source command sent to AVR");
+			logger.info("ActiveSourceCommand.py executed");
 		} catch (IOException e) {
 			logger.error(e.getMessage());
 			e.printStackTrace();

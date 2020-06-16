@@ -47,7 +47,7 @@ public class RadioController implements IPhoneObserver {
 			logger.info("Time to play music = true. Stop scanning and start playing radio");
 			stopScanning();
 			playRadio();
-			playRadio();
+			//playRadio();
 			initStopPlayingTask();
 			switchOnLights();
 		} else {
@@ -89,6 +89,7 @@ public class RadioController implements IPhoneObserver {
 	}
 
 	private void playRadio() {
+		logger.info("Akquir");
 		AVRActiveSource avrActiveSource = new AVRActiveSource();
 		avrActiveSource.aquireActiveSource();
 	}
