@@ -46,7 +46,7 @@ public class RadioController implements IPhoneObserver {
 		if (isTimeToPlayMusic()) {
 			logger.info("Time to play music = true. Stop scanning and start playing radio");
 			stopScanning();
-			aquireActiveSource();
+			playRadio();
 			playRadio();
 			initStopPlayingTask();
 			switchOnLights();
@@ -88,15 +88,15 @@ public class RadioController implements IPhoneObserver {
 		_scanIPhoneTimer.schedule(_scanIPhoneTask, delay, SCAN_RATE);
 	}
 
-	private void aquireActiveSource() {
+	private void playRadio() {
 		AVRActiveSource avrActiveSource = new AVRActiveSource();
 		avrActiveSource.aquireActiveSource();
 	}
 
-	private void playRadio() {
-		MPCRadioPlayer radioPlayer = new MPCRadioPlayer();
-		radioPlayer.playRadio();
-	}
+//	private void playRadio() {
+//		MPCRadioPlayer radioPlayer = new MPCRadioPlayer();
+//		radioPlayer.playRadio();
+//	}
 
 	/*
 	 * Stoppe radio nach 90 Minuten, damit es nicht die ganze Nacht durchläuft
