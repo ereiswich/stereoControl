@@ -1,6 +1,9 @@
 package de.reiswich.homeautomation.stereo_control.stereo;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,15 +21,21 @@ public class AVRActiveSource {
 	public void aquireActiveSource() {
 		try {
 			Runtime r = Runtime.getRuntime();
-			Process p = r.exec("python /home/pi/projects/radioplay/ActiveSourceCommand.py");
-			p.waitFor();
+			Process p = r.exec("python3 /home/pi/projects/radioplay/ActiveSourceCommand.py");
+			// p.waitFor();
 
+			InputStream pythonInputStream = p.getInputStream();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(pythonInputStream));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				logger.debug("Python output: " + line);
+			}
 			logger.info("ActiveSourceCommand.py executed");
 		} catch (IOException e) {
 			logger.error(e.getMessage());
 			e.printStackTrace();
-		} catch (InterruptedException e) {
-			logger.error(e.getMessage());
+		} catch (Exception e) {
+			logger.error("Unerwarteter Fehler ist aufgetreten: " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
