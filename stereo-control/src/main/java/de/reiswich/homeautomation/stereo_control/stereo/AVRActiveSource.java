@@ -20,17 +20,35 @@ public class AVRActiveSource {
 
 	public void aquireActiveSource() {
 		try {
-			Runtime r = Runtime.getRuntime();
-			Process p = r.exec("python3 /home/pi/projects/radioplay/ActiveSourceCommand.py");
-			// p.waitFor();
+			Runtime osRuntime = Runtime.getRuntime();
+			// man braucht den ProcessBuilder mit bash, da der | von der Command-Shell interpretiert wird
+			ProcessBuilder builder = new ProcessBuilder("bash", "-c", "echo as | cec-client -s"); 
+			Process osProcess = builder.start();
+			// Process osProcess= osRuntime.exec("python3 /home/pi/projects/radioplay/ActiveSourceCommand.py");
+			
+			// Process osProcess = osRuntime.exec("echo as | cec-client -s");
+			osProcess.waitFor();
+			logger.info("Active Source CEC-Command executed");
 
-			InputStream pythonInputStream = p.getInputStream();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(pythonInputStream));
-			String line;
-			while ((line = reader.readLine()) != null) {
-				logger.debug("Python output: " + line);
+			String mpcPlayCommand = "mpc play 1";
+			osProcess = osRuntime.exec(mpcPlayCommand);
+			int returnCode = osProcess.waitFor();
+			if (returnCode != 0) { // 0 ist per Konvention kein Fehlerr
+				logger.debug("Mpc Play 1 hat einen Fehler zurückgeliefert. Code ist: " + returnCode);
+				logger.debug("Starte MPD neu und versuche es noch mal");
+				// Starte MPD neu und probier's noch mal
+				Process restartMpdProcess = osRuntime.exec("sudo systemctl restart mpd");
+				restartMpdProcess.waitFor();
+				osRuntime.exec(mpcPlayCommand);
 			}
-			logger.info("ActiveSourceCommand.py executed");
+			logger.debug("Mpc play command executed");
+
+//			InputStream pythonInputStream = p.getInputStream();
+//			BufferedReader reader = new BufferedReader(new InputStreamReader(pythonInputStream));
+//			String line;
+//			while ((line = reader.readLine()) != null) {
+//				logger.debug("Python output: " + line);
+//			}
 		} catch (IOException e) {
 			logger.error(e.getMessage());
 			e.printStackTrace();
