@@ -29,7 +29,10 @@ public class AVRActiveSource {
 			// Process osProcess = osRuntime.exec("echo as | cec-client -s");
 			osProcess.waitFor();
 			logger.info("Active Source CEC-Command executed");
-
+			
+			String mpcVolumeCommand ="mpc volume 90";
+			osProcess = osRuntime.exec(mpcVolumeCommand);
+			
 			String mpcPlayCommand = "mpc play 1";
 			osProcess = osRuntime.exec(mpcPlayCommand);
 			int returnCode = osProcess.waitFor();
