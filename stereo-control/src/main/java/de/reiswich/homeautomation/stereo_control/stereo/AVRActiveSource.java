@@ -30,6 +30,10 @@ public class AVRActiveSource {
 			osProcess.waitFor();
 			logger.info("Active Source CEC-Command executed");
 			
+			// bislang spiel die Musik nicht immer. Probiere mal mit einem Restart des Services
+			osProcess = osRuntime.exec("sudo systemctl restart mpd");
+			osProcess.waitFor();
+			
 			String mpcVolumeCommand ="mpc volume 90";
 			osProcess = osRuntime.exec(mpcVolumeCommand);
 			
