@@ -17,12 +17,23 @@ public class MPCRadioPlayer {
 
 	public void playRadio() {
 		try {
-			int radioStationNumber = determineRadioStationNumber();
-			Process process = Runtime.getRuntime().exec(
-					"mpc play " + radioStationNumber);
-			process.waitFor();
-			logger.info("MPC play " + radioStationNumber
-					+ " - command sent to AVR");
+
+			ProcessBuilder builder = new ProcessBuilder("bash", "-c", "mpc volume 90 | mpc play 1");
+			Process osProcess = builder.start();
+			int returnCode = osProcess.waitFor();
+			logger.info("MPC play 1 command sent to AVR");
+
+			if (returnCode != 0) { // 0 ist per Konvention kein Fehler
+				logger.debug("Mpc Play 1 hat einen Fehler zurückgeliefert. Code ist: " + returnCode);
+				logger.debug("Starte MPD neu und versuche es noch mal");
+
+				// Starte MPD neu und probier's noch mal
+				builder = new ProcessBuilder("bash", "-c", "sudo systemctl restart mpd");
+				osProcess = builder.start();
+
+				playRadio();
+
+			}
 		} catch (IOException e) {
 			logger.error(e.getMessage());
 			e.printStackTrace();
@@ -30,18 +41,5 @@ public class MPCRadioPlayer {
 			logger.error(e.getMessage());
 			e.printStackTrace();
 		}
-	}
-
-	private int determineRadioStationNumber() {
-		// Calendar cal = new GregorianCalendar();
-		// cal.setTime(new Date());
-		// int hour = cal.get(Calendar.HOUR_OF_DAY);
-		// ab 18 Uhr wird gechillt
-		return 1;
-		// if (hour >= 18) {
-		// return 1; // ABC Lounge
-		// } else {
-		// return 3; // 917x.fm
-		// }
 	}
 }
