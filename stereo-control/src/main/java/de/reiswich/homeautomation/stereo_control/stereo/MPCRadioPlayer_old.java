@@ -11,9 +11,9 @@ import org.slf4j.LoggerFactory;
  * @author reiswich
  * 
  */
-public class MPCRadioPlayer {
+public class MPCRadioPlayer_old {
 
-	Logger logger = LoggerFactory.getLogger(MPCRadioPlayer.class.getName());
+	Logger logger = LoggerFactory.getLogger(MPCRadioPlayer_old.class.getName());
 
 	public void playRadio() {
 		try {

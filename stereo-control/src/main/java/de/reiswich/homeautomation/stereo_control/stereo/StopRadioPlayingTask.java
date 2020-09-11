@@ -1,6 +1,5 @@
 package de.reiswich.homeautomation.stereo_control.stereo;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimerTask;
@@ -21,20 +20,17 @@ public class StopRadioPlayingTask extends TimerTask {
 
 	private List<IStopPlayingRadioObserver> _observer = new ArrayList<IStopPlayingRadioObserver>();
 
+	private MPCRadioPlayer radioPlayer;
+
+	public StopRadioPlayingTask(MPCRadioPlayer radioPlayer) {
+		this.radioPlayer = radioPlayer;
+	}
+
 	@Override
 	public void run() {
-		try {
-			Process process = Runtime.getRuntime().exec("mpc stop");
-			process.waitFor();
-			logger.info("MPC stop " + " - command sent to AVR");
-			informObserver();
-		} catch (IOException e) {
-			logger.error(e.getMessage());
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			logger.error(e.getMessage());
-			e.printStackTrace();
-		}
+		this.radioPlayer.stopPlaying();
+		logger.info("MPD Player stop executed");
+		informObserver();
 	}
 
 	private void informObserver() {

@@ -31,9 +31,12 @@ public class RadioController implements IPhoneObserver {
 
 	private LightSwitch _lightSwitch;
 
-	public RadioController(Properties props, LightSwitch lightSwitch) {
+	private MPCRadioPlayer radioPlayer;
+
+	public RadioController(Properties props, LightSwitch lightSwitch, MPCRadioPlayer radioPlayer) {
 		_mobileDevices = props;
 		_lightSwitch = lightSwitch;
+		this.radioPlayer = radioPlayer;
 	}
 
 	public void init() {
@@ -97,15 +100,14 @@ public class RadioController implements IPhoneObserver {
 	}
 
 	private void playRadio() {
-		MPCRadioPlayer radioPlayer = new MPCRadioPlayer();
-		radioPlayer.playRadio();
+		this.radioPlayer.playSong();
 	}
 
 	/*
 	 * Stoppe radio nach 90 Minuten, damit es nicht die ganze Nacht durchläuft
 	 */
 	private void initStopPlayingTask() {
-		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask();
+		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask(this.radioPlayer);
 		int minutesForRestart = 90;
 		_scanIPhoneTimer.schedule(stopRadioPlaying, minutesForRestart * 60 * 1000); // 60 Min.
 		logger.info("Stop playing radio timer initialized after " + minutesForRestart + " Min.");

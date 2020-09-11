@@ -5,7 +5,7 @@
 
 	<groupId>de.reiswich.homeautomation</groupId>
 	<artifactId>stereo-control</artifactId>
-	<version>1.0.9</version>
+	<version>1.1.0</version>
 	<packaging>jar</packaging>
 
 	<name>stereo-control</name>
@@ -35,9 +35,21 @@
 			<groupId>com.googlecode.json-simple</groupId>
 			<artifactId>json-simple</artifactId>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/net.thejavashop/javampd -->
+		<dependency>
+			<groupId>net.thejavashop</groupId>
+			<artifactId>javampd</artifactId>
+			<version>5.0.0</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>config</directory>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

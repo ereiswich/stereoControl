@@ -7,14 +7,24 @@ import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
 import de.reiswich.homeautomation.stereo_control.light.LightSwitch;
+import de.reiswich.homeautomation.stereo_control.stereo.MPCRadioPlayer;
 
 @Configuration
+@PropertySource("classpath:application.properties")
 public class ProdConfiguration {
+	
+	@Value( "${de.reiswich.mpd.server}" )
+	private String mpdServerIp;
+	
+	@Value( "${de.reiswich.mpd.port}" )
+	private int mpdServerPort;
 
 	private Logger logger = LoggerFactory.getLogger(ProdConfiguration.class.getName());
 
@@ -22,11 +32,16 @@ public class ProdConfiguration {
 	public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
 		return new PropertySourcesPlaceholderConfigurer();
 	}
+	
+	@Bean
+	public MPCRadioPlayer getMpcRadioPlayer() {
+		return new MPCRadioPlayer(mpdServerIp, mpdServerPort);
+	}
 
 	@Bean
 	public RadioController getRadioController() {
 		logger.debug("initializing RadioController");
-		RadioController radioController = new RadioController(getMobileDevicesProperties(), getLightSwitch());
+		RadioController radioController = new RadioController(getMobileDevicesProperties(), getLightSwitch(), getMpcRadioPlayer());
 		radioController.init();
 		logger.debug("RadioController initialized");
 		return radioController;
