@@ -1,13 +1,29 @@
 package de.reiswich.homeautomation.stereo_control;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.junit.After;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
+import de.reiswich.homeautomation.stereo_control.stereo.MPCRadioPlayer;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest
 public class RadioControllerTest {
+	
+	@Autowired
+	private RadioController radioController;
+	
+	@Autowired private MPCRadioPlayer radioPlayer;
 
 	@Test
 	public void testIsTimeToPlay() {
@@ -35,6 +51,21 @@ public class RadioControllerTest {
 			timeToPlay = true;
 		}
 		return timeToPlay;
+	}
+	
+	@Test
+	public void playMusicTest() {
+		this.radioController.init();
+	}
+	
+	@Test
+	public void iPhoneDetectedTest() throws InterruptedException {
+		 this.radioController.iPhoneDetected();
+	}
+	
+	@After
+	public void tearDown() {
+		this.radioPlayer.stopPlaying();
 	}
 
 }

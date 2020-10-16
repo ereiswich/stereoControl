@@ -49,9 +49,9 @@ public class RadioController implements IPhoneObserver {
 		if (isTimeToPlayMusic()) {
 			logger.info("Time to play music = true. Stop scanning and start playing radio");
 			stopScanning();
-			
-			akquireActiveSource();
+
 			playRadio();
+			akquireActiveSource();
 
 			initStopPlayingTask();
 			switchOnLights();
@@ -108,9 +108,6 @@ public class RadioController implements IPhoneObserver {
 	 */
 	private void initStopPlayingTask() {
 		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask(this.radioPlayer);
-		int minutesForRestart = 90;
-		_scanIPhoneTimer.schedule(stopRadioPlaying, minutesForRestart * 60 * 1000); // 60 Min.
-		logger.info("Stop playing radio timer initialized after " + minutesForRestart + " Min.");
 
 		stopRadioPlaying.addObserver(new IStopPlayingRadioObserver() {
 			@Override
@@ -118,6 +115,11 @@ public class RadioController implements IPhoneObserver {
 				initRestartScanning();
 			}
 		});
+
+		int minutesForRestart = 1; //90
+		_scanIPhoneTimer.schedule(stopRadioPlaying, minutesForRestart * 60 * 1000);
+		// // 60 Min.
+		logger.info("Stop playing radio timer initialized after " + minutesForRestart + " Min.");
 	}
 
 	@Override
@@ -143,7 +145,7 @@ public class RadioController implements IPhoneObserver {
 				 * Ping may fail. Don't restart iPhone scanner immediately. Failing e.g. ten
 				 * times is more unlikely, thus iPhone is truly out of range.
 				 */
-				if (pingFailedCounter >= 10) {
+				if (pingFailedCounter >= 1) {
 					logger.info(
 							"Ping failed counter >=10. \n Cancel restart iPhone scanner task. \n Start scanning iPhone.");
 					_restartIPhoneScannerTask.cancel();
@@ -166,7 +168,7 @@ public class RadioController implements IPhoneObserver {
 			}
 		});
 		// each 5 Min.
-		int scanForMobileDeviceEachMinutes = 5;
+		int scanForMobileDeviceEachMinutes = 1;
 		_scanIPhoneTimer.schedule(_restartIPhoneScannerTask, 0, scanForMobileDeviceEachMinutes * 60 * 1000);
 	}
 
@@ -177,7 +179,7 @@ public class RadioController implements IPhoneObserver {
 		// 24 hour clock
 		int hour = cal.get(Calendar.HOUR_OF_DAY);
 		// don't play at night
-		if ( hour >= 11 && hour < 22) {
+		if (hour >= 11 && hour < 22) {
 			timeToPlay = true;
 		}
 		logger.debug("Time to play music: " + timeToPlay + "\t -> (hour >= 11 && hour < 22)");

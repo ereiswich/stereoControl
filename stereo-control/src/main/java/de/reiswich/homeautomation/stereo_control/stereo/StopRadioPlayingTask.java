@@ -28,6 +28,7 @@ public class StopRadioPlayingTask extends TimerTask {
 
 	@Override
 	public void run() {
+		logger.info("Trying to stop music player");
 		this.radioPlayer.stopPlaying();
 		logger.info("MPD Player stop executed");
 		informObserver();
