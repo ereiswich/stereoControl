@@ -1,0 +1,8 @@
+// File kopieren
+scp stereo-control-1.1.4.jar pi@192.168.178.23:/home/pi/projects/radioplay
+
+// Ordner kopieren
+scp -r /config pi@192.168.178.77:/home/pi/projects/radioplay
+
+// ssh
+ssh pi@192.168.178.23
