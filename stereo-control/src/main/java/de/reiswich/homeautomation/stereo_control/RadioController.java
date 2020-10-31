@@ -116,7 +116,7 @@ public class RadioController implements IPhoneObserver {
 			}
 		});
 
-		int minutesForRestart = 1; //90
+		int minutesForRestart = 90; //90
 		_scanIPhoneTimer.schedule(stopRadioPlaying, minutesForRestart * 60 * 1000);
 		// // 60 Min.
 		logger.info("Stop playing radio timer initialized after " + minutesForRestart + " Min.");
@@ -145,7 +145,7 @@ public class RadioController implements IPhoneObserver {
 				 * Ping may fail. Don't restart iPhone scanner immediately. Failing e.g. ten
 				 * times is more unlikely, thus iPhone is truly out of range.
 				 */
-				if (pingFailedCounter >= 1) {
+				if (pingFailedCounter >= 10) {
 					logger.info(
 							"Ping failed counter >=10. \n Cancel restart iPhone scanner task. \n Start scanning iPhone.");
 					_restartIPhoneScannerTask.cancel();
@@ -168,7 +168,7 @@ public class RadioController implements IPhoneObserver {
 			}
 		});
 		// each 5 Min.
-		int scanForMobileDeviceEachMinutes = 1;
+		int scanForMobileDeviceEachMinutes = 5;
 		_scanIPhoneTimer.schedule(_restartIPhoneScannerTask, 0, scanForMobileDeviceEachMinutes * 60 * 1000);
 	}
 

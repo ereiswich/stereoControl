@@ -54,11 +54,6 @@ public class RadioControllerTest {
 	}
 	
 	@Test
-	public void playMusicTest() {
-		this.radioController.init();
-	}
-	
-	@Test
 	public void iPhoneDetectedTest() throws InterruptedException {
 		 this.radioController.iPhoneDetected();
 	}
