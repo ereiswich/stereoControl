@@ -15,16 +15,17 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
 import de.reiswich.homeautomation.stereo_control.light.LightSwitch;
 import de.reiswich.homeautomation.stereo_control.stereo.MPCRadioPlayer;
+import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Socket;
 
 @Configuration
 @PropertySource("classpath:application.properties")
 public class ProdConfiguration {
 	
-	@Value( "${de.reiswich.mpd.server}" )
-	private String mpdServerIp;
-	
-	@Value( "${de.reiswich.mpd.port}" )
-	private int mpdServerPort;
+	@Value( "${heos.ip}" )
+	private String heosIp;
+
+	@Value( "${heos.port}" )
+	private int heosPort;
 
 	private Logger logger = LoggerFactory.getLogger(ProdConfiguration.class.getName());
 
@@ -32,26 +33,19 @@ public class ProdConfiguration {
 	public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
 		return new PropertySourcesPlaceholderConfigurer();
 	}
-	
-	@Bean
-	public MPCRadioPlayer getMpcRadioPlayer() {
-		return new MPCRadioPlayer(mpdServerIp, mpdServerPort);
-	}
 
 	@Bean
 	public RadioController getRadioController() {
 		logger.debug("initializing RadioController");
-		RadioController radioController = new RadioController(getMobileDevicesProperties(), getLightSwitch(), getMpcRadioPlayer());
+		RadioController radioController = new RadioController(getMobileDevicesProperties());
 		radioController.init();
 		logger.debug("RadioController initialized");
 		return radioController;
 	}
 
-
 	@Bean
-	public LightSwitch getLightSwitch() {
-		logger.debug("initializing LightSwitch");
-		return new LightSwitch();
+	public PlayerController_Socket playerControllerSocket() {
+		return new PlayerController_Socket(heosIp, heosPort);
 	}
 
 	private Properties getMobileDevicesProperties() {

@@ -9,12 +9,10 @@ import java.util.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.reiswich.homeautomation.stereo_control.light.LightSwitch;
 import de.reiswich.homeautomation.stereo_control.scanning.DetectIPhoneTask;
 import de.reiswich.homeautomation.stereo_control.scanning.IPhoneObserver;
-import de.reiswich.homeautomation.stereo_control.stereo.AVRActiveSource;
+import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Socket;
 import de.reiswich.homeautomation.stereo_control.stereo.IStopPlayingRadioObserver;
-import de.reiswich.homeautomation.stereo_control.stereo.MPCRadioPlayer;
 import de.reiswich.homeautomation.stereo_control.stereo.StopRadioPlayingTask;
 
 public class RadioController implements IPhoneObserver {
@@ -28,15 +26,10 @@ public class RadioController implements IPhoneObserver {
 	private DetectIPhoneTask _restartIPhoneScannerTask;
 
 	private Properties _mobileDevices;
+	
 
-	private LightSwitch _lightSwitch;
-
-	private MPCRadioPlayer radioPlayer;
-
-	public RadioController(Properties props, LightSwitch lightSwitch, MPCRadioPlayer radioPlayer) {
+	public RadioController(Properties props) {
 		_mobileDevices = props;
-		_lightSwitch = lightSwitch;
-		this.radioPlayer = radioPlayer;
 	}
 
 	public void init() {
@@ -50,11 +43,12 @@ public class RadioController implements IPhoneObserver {
 			logger.info("Time to play music = true. Stop scanning and start playing radio");
 			stopScanning();
 
-			playRadio();
+		
 			akquireActiveSource();
+			logger.info("ActiveSourceCommand sent");
 
 			initStopPlayingTask();
-			switchOnLights();
+			
 		} else {
 			logger.info("Time to play music = false. Restart scanning.");
 			/*
@@ -74,10 +68,6 @@ public class RadioController implements IPhoneObserver {
 		_scanIPhoneTimer.purge();
 	}
 
-	private void switchOnLights() {
-		this._lightSwitch.switchOnLights();
-	}
-
 	@Override
 	public void iPhoneOffline() {
 		// logger.debug("iPhone connection lost.");
@@ -95,19 +85,16 @@ public class RadioController implements IPhoneObserver {
 
 	private void akquireActiveSource() {
 		logger.info("Akquir");
-		AVRActiveSource avrActiveSource = new AVRActiveSource();
-		avrActiveSource.aquireActiveSource();
+		
+		PlayerController_Socket.startPlayer();
 	}
 
-	private void playRadio() {
-		this.radioPlayer.playSong();
-	}
 
 	/*
 	 * Stoppe radio nach 90 Minuten, damit es nicht die ganze Nacht durchläuft
 	 */
 	private void initStopPlayingTask() {
-		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask(this.radioPlayer);
+		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask();
 
 		stopRadioPlaying.addObserver(new IStopPlayingRadioObserver() {
 			@Override

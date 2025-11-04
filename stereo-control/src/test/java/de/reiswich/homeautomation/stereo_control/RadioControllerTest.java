@@ -23,7 +23,6 @@ public class RadioControllerTest {
 	@Autowired
 	private RadioController radioController;
 	
-	@Autowired private MPCRadioPlayer radioPlayer;
 
 	@Test
 	public void testIsTimeToPlay() {
@@ -58,9 +57,6 @@ public class RadioControllerTest {
 		 this.radioController.iPhoneDetected();
 	}
 	
-	@After
-	public void tearDown() {
-		this.radioPlayer.stopPlaying();
-	}
+ 
 
 }

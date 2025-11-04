@@ -7,6 +7,8 @@ import java.util.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Socket;
+
 /**
  * Stops playing radio after x minutes. Otherwise the radio player will never
  * end and has to be stopped manually.
@@ -20,17 +22,17 @@ public class StopRadioPlayingTask extends TimerTask {
 
 	private List<IStopPlayingRadioObserver> _observer = new ArrayList<IStopPlayingRadioObserver>();
 
-	private MPCRadioPlayer radioPlayer;
 
-	public StopRadioPlayingTask(MPCRadioPlayer radioPlayer) {
-		this.radioPlayer = radioPlayer;
+
+	public StopRadioPlayingTask( ) {
+		
 	}
 
 	@Override
 	public void run() {
 		logger.info("Trying to stop music player");
-		this.radioPlayer.stopPlaying();
-		logger.info("MPD Player stop executed");
+		PlayerController_Socket.stopPlayer();
+		logger.info("AVR stop player command sent");
 		informObserver();
 	}
 
