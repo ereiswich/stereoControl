@@ -13,8 +13,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
-import de.reiswich.homeautomation.stereo_control.light.LightSwitch;
-import de.reiswich.homeautomation.stereo_control.stereo.MPCRadioPlayer;
 import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Socket;
 
 @Configuration
@@ -37,7 +35,7 @@ public class ProdConfiguration {
 	@Bean
 	public RadioController getRadioController() {
 		logger.debug("initializing RadioController");
-		RadioController radioController = new RadioController(getMobileDevicesProperties());
+		RadioController radioController = new RadioController(getMobileDevicesProperties(), playerControllerSocket());
 		radioController.init();
 		logger.debug("RadioController initialized");
 		return radioController;

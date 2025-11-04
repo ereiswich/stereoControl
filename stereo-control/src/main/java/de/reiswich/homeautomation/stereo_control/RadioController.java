@@ -14,6 +14,7 @@ import de.reiswich.homeautomation.stereo_control.scanning.IPhoneObserver;
 import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Socket;
 import de.reiswich.homeautomation.stereo_control.stereo.IStopPlayingRadioObserver;
 import de.reiswich.homeautomation.stereo_control.stereo.StopRadioPlayingTask;
+import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerResponse;
 
 public class RadioController implements IPhoneObserver {
 	private Logger logger = LoggerFactory.getLogger(RadioController.class.getName());
@@ -26,10 +27,11 @@ public class RadioController implements IPhoneObserver {
 	private DetectIPhoneTask _restartIPhoneScannerTask;
 
 	private Properties _mobileDevices;
-	
+	private final PlayerController_Socket playerController;
 
-	public RadioController(Properties props) {
+	public RadioController(Properties props, PlayerController_Socket playerController) {
 		_mobileDevices = props;
+		this.playerController = playerController;
 	}
 
 	public void init() {
@@ -85,8 +87,9 @@ public class RadioController implements IPhoneObserver {
 
 	private void akquireActiveSource() {
 		logger.info("Akquir");
-		
-		PlayerController_Socket.startPlayer();
+
+		HeosPlayerResponse playerResponse = playerController.readHeosPlayer();
+		playerController.playRadio(playerResponse.getPayload().get(0).getPid());
 	}
 
 
