@@ -2,7 +2,7 @@
 ifconfig
 
 // File kopieren
-scp stereo-control-1.1.5.jar pi@192.168.178.23:/home/pi/projects/radioplay
+scp stereo-control-1.1.7.jar pi@192.168.178.37:/home/pi/projects/radioplay
 
 Passwort: 4erxxxxxxx
 
