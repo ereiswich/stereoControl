@@ -46,7 +46,7 @@ public class RadioController implements IPhoneObserver {
 			stopScanning();
 
 		
-			akquireActiveSource();
+			startRadioPlayer();
 			logger.info("ActiveSourceCommand sent");
 
 			initStopPlayingTask();
@@ -85,8 +85,8 @@ public class RadioController implements IPhoneObserver {
 		_scanIPhoneTimer.schedule(_scanIPhoneTask, delay, SCAN_RATE);
 	}
 
-	private void akquireActiveSource() {
-		logger.info("Akquir");
+	private void startRadioPlayer() {
+		logger.debug("startRadioPlayer with HEOS-API");
 
 		HeosPlayerResponse playerResponse = playerController.readHeosPlayer();
 		playerController.playRadio(playerResponse.getPayload().get(0).getPid());
@@ -97,7 +97,7 @@ public class RadioController implements IPhoneObserver {
 	 * Stoppe radio nach 90 Minuten, damit es nicht die ganze Nacht durchläuft
 	 */
 	private void initStopPlayingTask() {
-		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask();
+		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask(playerController);
 
 		stopRadioPlaying.addObserver(new IStopPlayingRadioObserver() {
 			@Override

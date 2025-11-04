@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Socket;
+import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerResponse;
 
 /**
  * Stops playing radio after x minutes. Otherwise the radio player will never
@@ -18,21 +19,21 @@ import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Soc
  */
 public class StopRadioPlayingTask extends TimerTask {
 
+	private final PlayerController_Socket playerController;
 	private Logger logger = LoggerFactory.getLogger(StopRadioPlayingTask.class);
 
 	private List<IStopPlayingRadioObserver> _observer = new ArrayList<IStopPlayingRadioObserver>();
 
-
-
-	public StopRadioPlayingTask( ) {
-		
+	public StopRadioPlayingTask(PlayerController_Socket playerController) {
+		this.playerController = playerController;
 	}
 
 	@Override
 	public void run() {
 		logger.info("Trying to stop music player");
-		PlayerController_Socket.stopPlayer();
-		logger.info("AVR stop player command sent");
+		HeosPlayerResponse playerResponse = playerController.readHeosPlayer();
+		playerController.stopRadioPlayer(playerResponse.getPayload().get(0).getPid());
+
 		informObserver();
 	}
 
