@@ -9,15 +9,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
+import de.reiswich.homeautomation.stereo_control.stereo.RadioController;
 import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Socket;
 
-@Configuration
+@org.springframework.context.annotation.Configuration
 @PropertySource("classpath:application.properties")
-public class ProdConfiguration {
+public class Configuration {
 	
 	@Value( "${heos.ip}" )
 	private String heosIp;
@@ -25,7 +25,7 @@ public class ProdConfiguration {
 	@Value( "${heos.port}" )
 	private int heosPort;
 
-	private Logger logger = LoggerFactory.getLogger(ProdConfiguration.class.getName());
+	private Logger logger = LoggerFactory.getLogger(Configuration.class.getName());
 
 	@Bean
 	public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {

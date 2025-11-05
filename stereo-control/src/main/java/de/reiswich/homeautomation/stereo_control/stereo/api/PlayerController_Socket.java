@@ -23,10 +23,10 @@ import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerRespon
  *
  */
 public class PlayerController_Socket {
-	private static Logger logger = LoggerFactory.getLogger(PlayerController_Socket.class.getName());
+	private final static Logger LOGGER = LoggerFactory.getLogger(PlayerController_Socket.class.getName());
 	private final String heosIp;
 	private final int heosPort;
-	private ObjectMapper objectMapper;
+	private final ObjectMapper objectMapper;
 	private static final int MAX_RETRIES = 3;
 	private static final long RETRY_DELAY_MS = 1000;
 
@@ -49,25 +49,25 @@ public class PlayerController_Socket {
 				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 				out.println(cmd); // Befehl senden
-				logger.debug("Befehl gesendet: {} mit IP: {} und Port: {} ", cmd.trim(), heosIp, heosPort);
+				LOGGER.debug("Befehl gesendet: {} mit IP: {} und Port: {} ", cmd.trim(), heosIp, heosPort);
 
 				String response = in.readLine();
-				logger.debug("Antwort von Heos: " + response);
+				LOGGER.debug("Antwort von Heos: " + response);
 				playerResponse = objectMapper.readValue(response, HeosPlayerResponse.class);
 
 				closeQuietly(in, out, socket);
 
 				// Erfolgreicher Versuch - Schleife verlassen
-				logger.debug("HEOS-Verbindung erfolgreich beim Versuch {}/{}", attempt, MAX_RETRIES);
+				LOGGER.debug("HEOS-Verbindung erfolgreich beim Versuch {}/{}", attempt, MAX_RETRIES);
 				break;
 			} catch (UnknownHostException e) {
-				logger.error("Unbekannter Host: " + heosIp);
+				LOGGER.error("Unbekannter Host: " + heosIp);
 			} catch (IOException e) {
-				logger.error("Fehler bei der Verbindung: " + e.getMessage());
+				LOGGER.error("Fehler bei der Verbindung: " + e.getMessage());
 				if (attempt < MAX_RETRIES) {
 					waitBeforeRetry();
 				} else {
-					logger.error("Alle HEOS-Verbindungsversuche fehlgeschlagen");
+					LOGGER.error("Alle HEOS-Verbindungsversuche fehlgeschlagen");
 				}
 			}
 		}
@@ -75,7 +75,7 @@ public class PlayerController_Socket {
 	}
 
 	public HeosCommandResponse playRadio(long playerId) {
-		logger.debug("play Radio with playerId: " + playerId);
+		LOGGER.debug("play Radio with playerId: " + playerId);
 		int beatsRadioStationId = 1;
 		String cmd = "heos://browse/play_preset?pid=" + playerId + "&preset=" + beatsRadioStationId;
 
@@ -83,13 +83,13 @@ public class PlayerController_Socket {
 	}
 
 	public HeosCommandResponse stopRadioPlayer(long playerId) {
-		logger.debug("stop Radio with playerId: " + playerId);
+		LOGGER.debug("stop Radio with playerId: " + playerId);
 		String cmd = "heos://player/set_play_state?pid=" + playerId + "&state=stop";
 		return executeRadioPlayerCommand(playerId, cmd);
 	}
 
 	protected HeosCommandResponse executeRadioPlayerCommand(long playerId, String command) {
-		logger.debug("execute Radio Player Command with playerId: {} and cmd: {}", playerId, command);
+		LOGGER.debug("execute Radio Player Command with playerId: {} and cmd: {}", playerId, command);
 		HeosCommandResponse heosCommandResponse = null;
 		for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
 
@@ -99,23 +99,23 @@ public class PlayerController_Socket {
 				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
 				out.println(command); // Befehl senden
-				logger.debug("Befehl gesendet: {} mit IP: {} und Port: {} ", command.trim(), heosIp, heosPort);
+				LOGGER.debug("Befehl gesendet: {} mit IP: {} und Port: {} ", command.trim(), heosIp, heosPort);
 
 				String response = in.readLine();
 				heosCommandResponse = objectMapper.readValue(response, HeosCommandResponse.class);
-				logger.debug("Antwort von Heos: " + heosCommandResponse.getHeos().getResult());
+				LOGGER.debug("Antwort von Heos: " + heosCommandResponse.getHeos().getResult());
 
 				closeQuietly(in, out, socket);
-				logger.debug("HEOS-Command erfolgreich beim Versuch {}/{}", attempt, MAX_RETRIES);
+				LOGGER.debug("HEOS-Command erfolgreich beim Versuch {}/{}", attempt, MAX_RETRIES);
 				break;
 			} catch (UnknownHostException e) {
-				logger.error("Unbekannter Host: " + heosIp);
+				LOGGER.error("Unbekannter Host: " + heosIp);
 			} catch (IOException e) {
-				logger.error("Fehler beim Aufbau der HEOS-Verbindung: " + e.getMessage());
+				LOGGER.error("Fehler beim Aufbau der HEOS-Verbindung: " + e.getMessage());
 				if (attempt < MAX_RETRIES) {
 					waitBeforeRetry();
 				} else {
-					logger.error("Alle Verbindungsversuche fehlgeschlagen");
+					LOGGER.error("Alle Verbindungsversuche fehlgeschlagen");
 				}
 			}
 		}
@@ -128,11 +128,11 @@ public class PlayerController_Socket {
 	 */
 	private void waitBeforeRetry() {
 		try {
-			logger.info("Waiting {} ms before retry...", RETRY_DELAY_MS);
+			LOGGER.info("Waiting {} ms before retry...", RETRY_DELAY_MS);
 			Thread.sleep(RETRY_DELAY_MS);
 		} catch (InterruptedException ie) {
 			Thread.currentThread().interrupt();
-			logger.error("Retry interrupted, aborting further attempts");
+			LOGGER.error("Retry interrupted, aborting further attempts");
 		}
 	}
 
@@ -148,7 +148,7 @@ public class PlayerController_Socket {
 			try {
 				in.close();
 			} catch (IOException e) {
-				logger.warn("Failed to close BufferedReader: {}", e.getMessage());
+				LOGGER.warn("Failed to close BufferedReader: {}", e.getMessage());
 			}
 		}
 
@@ -156,7 +156,7 @@ public class PlayerController_Socket {
 			try {
 				out.close();
 			} catch (Exception e) {
-				logger.warn("Failed to close PrintWriter: {}", e.getMessage());
+				LOGGER.warn("Failed to close PrintWriter: {}", e.getMessage());
 			}
 		}
 
@@ -164,7 +164,7 @@ public class PlayerController_Socket {
 			try {
 				socket.close();
 			} catch (IOException e) {
-				logger.warn("Failed to close socket: {}", e.getMessage());
+				LOGGER.warn("Failed to close socket: {}", e.getMessage());
 			}
 		}
 	}

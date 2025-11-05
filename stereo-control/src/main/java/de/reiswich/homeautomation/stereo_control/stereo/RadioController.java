@@ -1,4 +1,4 @@
-package de.reiswich.homeautomation.stereo_control;
+package de.reiswich.homeautomation.stereo_control.stereo;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -12,8 +12,6 @@ import org.slf4j.LoggerFactory;
 import de.reiswich.homeautomation.stereo_control.scanning.DetectIPhoneTask;
 import de.reiswich.homeautomation.stereo_control.scanning.IPhoneObserver;
 import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Socket;
-import de.reiswich.homeautomation.stereo_control.stereo.IStopPlayingRadioObserver;
-import de.reiswich.homeautomation.stereo_control.stereo.StopRadioPlayingTask;
 import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerResponse;
 
 public class RadioController implements IPhoneObserver {
@@ -44,11 +42,7 @@ public class RadioController implements IPhoneObserver {
 		if (isTimeToPlayMusic()) {
 			logger.info("Time to play music = true. Stop scanning and start playing radio");
 			stopScanning();
-
-		
 			startRadioPlayer();
-			logger.info("ActiveSourceCommand sent");
-
 			initStopPlayingTask();
 			
 		} else {
