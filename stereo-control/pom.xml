@@ -5,7 +5,7 @@
 
 	<groupId>de.reiswich.homeautomation</groupId>
 	<artifactId>stereo-control</artifactId>
-	<version>1.2.0</version>
+	<version>1.2.3</version>
 	<packaging>jar</packaging>
 
 	<name>stereo-control</name>
@@ -63,6 +63,27 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>deploy-to-pi</id>
+            <phase>install</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>scp</executable>
+              <arguments>
+                <argument>target/stereo-control-${project.version}.jar</argument>
+                <argument>pi@192.168.178.37:/home/pi/projects/radioplay</argument>
+              </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 		</plugins>
 	</build>
 </project>
