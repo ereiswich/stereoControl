@@ -89,7 +89,7 @@ public class PlayerController_Socket {
 	}
 
 	protected HeosCommandResponse executeRadioPlayerCommand(long playerId, String command) {
-		logger.debug("stop Radio with playerId: " + playerId);
+		logger.debug("execute Radio Player Command with playerId: {} and cmd: {}", playerId, command);
 		HeosCommandResponse heosCommandResponse = null;
 		for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
 
