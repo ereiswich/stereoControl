@@ -107,7 +107,7 @@ public class RadioController implements IPhoneObserver {
 		long minutesForRestartInMillis = TimeUnit.MINUTES.toMillis(radioControllerProperties.getRestartAfterMinutes());
 		_scanIPhoneTimer.schedule(stopRadioPlaying, minutesForRestartInMillis);
 		// // 60 Min.
-		LOGGER.info("Stop playing radio timer initialized after: {} Min.", minutesForRestartInMillis);
+		LOGGER.info("Stop playing radio timer initialized after: {} Min.", radioControllerProperties.getRestartAfterMinutes());
 	}
 
 	@Override
