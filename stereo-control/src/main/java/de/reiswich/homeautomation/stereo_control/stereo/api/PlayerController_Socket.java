@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -29,6 +30,7 @@ public class PlayerController_Socket {
 	private final ObjectMapper objectMapper;
 	private static final int MAX_RETRIES = 3;
 	private static final long RETRY_DELAY_MS = 1000;
+	private static final int CONNECTION_TIMEOUT_MS = 5000;
 
 	public PlayerController_Socket(String heosIp, int heosPort) {
 		this.heosIp = heosIp;
@@ -43,8 +45,8 @@ public class PlayerController_Socket {
 
 		for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
 
-			try {
-				Socket socket = new Socket(heosIp, heosPort);
+			try (Socket socket = new Socket()){
+				socket.connect(new InetSocketAddress(heosIp, heosPort), CONNECTION_TIMEOUT_MS);
 				PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
@@ -54,8 +56,6 @@ public class PlayerController_Socket {
 				String response = in.readLine();
 				LOGGER.debug("Antwort von Heos: " + response);
 				playerResponse = objectMapper.readValue(response, HeosPlayerResponse.class);
-
-				closeQuietly(in, out, socket);
 
 				// Erfolgreicher Versuch - Schleife verlassen
 				LOGGER.debug("HEOS-Verbindung erfolgreich beim Versuch {}/{}", attempt, MAX_RETRIES);
@@ -93,8 +93,8 @@ public class PlayerController_Socket {
 		HeosCommandResponse heosCommandResponse = null;
 		for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
 
-			try {
-				Socket socket = new Socket(heosIp, heosPort);
+			try(Socket socket = new Socket()) {
+				socket.connect(new InetSocketAddress(heosIp, heosPort), CONNECTION_TIMEOUT_MS);
 				PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
@@ -105,7 +105,6 @@ public class PlayerController_Socket {
 				heosCommandResponse = objectMapper.readValue(response, HeosCommandResponse.class);
 				LOGGER.debug("Antwort von Heos: " + heosCommandResponse.getHeos().getResult());
 
-				closeQuietly(in, out, socket);
 				LOGGER.debug("HEOS-Command erfolgreich beim Versuch {}/{}", attempt, MAX_RETRIES);
 				break;
 			} catch (UnknownHostException e) {
@@ -133,39 +132,6 @@ public class PlayerController_Socket {
 		} catch (InterruptedException ie) {
 			Thread.currentThread().interrupt();
 			LOGGER.error("Retry interrupted, aborting further attempts");
-		}
-	}
-
-	/**
-	 * Closes resources quietly without throwing exceptions.
-	 *
-	 * @param in BufferedReader to close
-	 * @param out PrintWriter to close
-	 * @param socket Socket to close
-	 */
-	private void closeQuietly(BufferedReader in, PrintWriter out, Socket socket) {
-		if (in != null) {
-			try {
-				in.close();
-			} catch (IOException e) {
-				LOGGER.warn("Failed to close BufferedReader: {}", e.getMessage());
-			}
-		}
-
-		if (out != null) {
-			try {
-				out.close();
-			} catch (Exception e) {
-				LOGGER.warn("Failed to close PrintWriter: {}", e.getMessage());
-			}
-		}
-
-		if (socket != null && !socket.isClosed()) {
-			try {
-				socket.close();
-			} catch (IOException e) {
-				LOGGER.warn("Failed to close socket: {}", e.getMessage());
-			}
 		}
 	}
 }

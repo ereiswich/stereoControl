@@ -1,7 +1,11 @@
+// ssh key auf dem PI hinterlegen
+ssh-keygen -t rsa  
+ssh-copy-id pi@192.168.178.37
+
 // IP vom Raspberry rausfinden 
 ifconfig
 
-// File kopieren
+// File kopieren - aktuell über die POM.XML gelöst. 
 scp stereo-control-1.1.7.jar pi@192.168.178.37:/home/pi/projects/radioplay
 
 Passwort: 4erxxxxxxx
