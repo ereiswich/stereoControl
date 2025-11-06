@@ -86,12 +86,8 @@ public class DetectIPhoneTask extends TimerTask {
 				logger.debug("Ping return line is null");
 				pingResult = false;
 			}
-		} catch (IOException e) {
+		} catch (IOException | InterruptedException e) {
 			logger.error(e.getMessage());
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			logger.error(e.getMessage());
-			e.printStackTrace();
 		}
 		return pingResult;
 	}

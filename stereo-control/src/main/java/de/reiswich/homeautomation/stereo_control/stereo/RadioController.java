@@ -1,10 +1,13 @@
 package de.reiswich.homeautomation.stereo_control.stereo;
 
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Properties;
 import java.util.Timer;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,21 +18,22 @@ import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Soc
 import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerResponse;
 
 public class RadioController implements IPhoneObserver {
-	private Logger logger = LoggerFactory.getLogger(RadioController.class.getName());
+	private Logger LOGGER = LoggerFactory.getLogger(RadioController.class.getName());
 
 	private Timer _scanIPhoneTimer;
-	private final int SCAN_RATE = 10 * 1000; // each 10 seconds
-
 	private DetectIPhoneTask _scanIPhoneTask;
-
 	private DetectIPhoneTask _restartIPhoneScannerTask;
-
 	private Properties _mobileDevices;
 	private final PlayerController_Socket playerController;
+	private final RadioControllerProperties radioControllerProperties;
 
-	public RadioController(Properties props, PlayerController_Socket playerController) {
+	public RadioController(Properties props,
+		PlayerController_Socket playerController,
+		RadioControllerProperties radioControllerProperties) {
 		_mobileDevices = props;
 		this.playerController = playerController;
+		this.radioControllerProperties = radioControllerProperties;
+		LOGGER.debug("RadioControllerproperties:  {}", radioControllerProperties);
 	}
 
 	public void init() {
@@ -38,15 +42,15 @@ public class RadioController implements IPhoneObserver {
 
 	@Override
 	public void iPhoneDetected() {
-		logger.info("\n \t >>> iPhone found. Check if it's time to play music.");
+		LOGGER.info("\n \t >>> iPhone found. Check if it's time to play music.");
 		if (isTimeToPlayMusic()) {
-			logger.info("Time to play music = true. Stop scanning and start playing radio");
+			LOGGER.info("Time to play music = true. Stop scanning and start playing radio");
 			stopScanning();
 			startRadioPlayer();
 			initStopPlayingTask();
-			
+
 		} else {
-			logger.info("Time to play music = false. Restart scanning.");
+			LOGGER.info("Time to play music = false. Restart scanning.");
 			/*
 			 * Arrived home too late. restart scanning task, otherwise the music will start
 			 * to play as soon as: isTimeToPlayMusic() returns true, although you are at
@@ -70,22 +74,22 @@ public class RadioController implements IPhoneObserver {
 	}
 
 	private void startScanning(long delay) {
-		logger.info("Initializing scanning tasks");
+		LOGGER.info("Initializing scanning tasks");
 		_scanIPhoneTask = new DetectIPhoneTask(_mobileDevices);
 		_scanIPhoneTask.addIPhoneObserver(this);
 
 		_scanIPhoneTimer = new Timer("iPhone Scanner");
 		// scan every x-seconds
-		_scanIPhoneTimer.schedule(_scanIPhoneTask, delay, SCAN_RATE);
+		long scanRateInMillis = TimeUnit.SECONDS.toMillis(radioControllerProperties.getScanRateInSec());
+		_scanIPhoneTimer.schedule(_scanIPhoneTask, delay, scanRateInMillis);
 	}
 
 	private void startRadioPlayer() {
-		logger.debug("startRadioPlayer with HEOS-API");
+		LOGGER.debug("startRadioPlayer with HEOS-API");
 
 		HeosPlayerResponse playerResponse = playerController.readHeosPlayer();
 		playerController.playRadio(playerResponse.getPayload().get(0).getPid());
 	}
-
 
 	/*
 	 * Stoppe radio nach 90 Minuten, damit es nicht die ganze Nacht durchläuft
@@ -100,10 +104,10 @@ public class RadioController implements IPhoneObserver {
 			}
 		});
 
-		int minutesForRestart = 90; //90
-		_scanIPhoneTimer.schedule(stopRadioPlaying, minutesForRestart * 60 * 1000);
+		long minutesForRestartInMillis = TimeUnit.MINUTES.toMillis(radioControllerProperties.getRestartAfterMinutes());
+		_scanIPhoneTimer.schedule(stopRadioPlaying, minutesForRestartInMillis);
 		// // 60 Min.
-		logger.info("Stop playing radio timer initialized after " + minutesForRestart + " Min.");
+		LOGGER.info("Stop playing radio timer initialized after: {} Min.", minutesForRestartInMillis);
 	}
 
 	@Override
@@ -116,7 +120,7 @@ public class RadioController implements IPhoneObserver {
 	 * person not at home) in range, thus restart scanning.
 	 */
 	private void initRestartScanning() {
-		logger.info("Initializing restart iPhone scanner task");
+		LOGGER.info("Initializing restart iPhone scanner task");
 		_restartIPhoneScannerTask = new DetectIPhoneTask(_mobileDevices);
 		_restartIPhoneScannerTask.addIPhoneObserver(new IPhoneObserver() {
 			int pingFailedCounter = 0;
@@ -124,14 +128,14 @@ public class RadioController implements IPhoneObserver {
 			@Override
 			public void iPhoneOffline() {
 				pingFailedCounter++;
-				logger.info("iPhone connection lost. Setting ping failed counter to: " + pingFailedCounter);
+				LOGGER.info("iPhone connection lost. Setting ping failed counter to: " + pingFailedCounter);
 				/*
 				 * Ping may fail. Don't restart iPhone scanner immediately. Failing e.g. ten
 				 * times is more unlikely, thus iPhone is truly out of range.
 				 */
-				if (pingFailedCounter >= 10) {
-					logger.info(
-							"Ping failed counter >=10. \n Cancel restart iPhone scanner task. \n Start scanning iPhone.");
+				if (pingFailedCounter >= radioControllerProperties.getPingFailCounter()) {
+					LOGGER.info(
+						"Ping failed counter >= " + radioControllerProperties.getPingFailCounter() + ". \n Cancel restart iPhone scanner task. \n Start scanning iPhone.");
 					_restartIPhoneScannerTask.cancel();
 					startScanning(0);
 				}
@@ -141,8 +145,8 @@ public class RadioController implements IPhoneObserver {
 			public void iPhoneDetected() {
 				// reset counter
 				pingFailedCounter = 0;
-				logger.debug(
-						"iPhone detected: 1. reset ping failed counter \n 2. nothing to do, iPhone is in range and connected");
+				LOGGER.debug(
+					"iPhone detected: 1. reset ping failed counter \n 2. nothing to do, iPhone is in range and connected");
 				// nothing to do
 			}
 
@@ -151,22 +155,21 @@ public class RadioController implements IPhoneObserver {
 				return "restart iPhone scanner task";
 			}
 		});
-		// each 5 Min.
-		int scanForMobileDeviceEachMinutes = 5;
-		_scanIPhoneTimer.schedule(_restartIPhoneScannerTask, 0, scanForMobileDeviceEachMinutes * 60 * 1000);
+
+		long scanForMobileDeviceEachMillis = TimeUnit.MINUTES.toMillis(radioControllerProperties.getScanForDevicesInMinutes());
+		_scanIPhoneTimer.schedule(_restartIPhoneScannerTask, 0, scanForMobileDeviceEachMillis);
 	}
 
 	protected boolean isTimeToPlayMusic() {
 		boolean timeToPlay = false;
-		Calendar cal = new GregorianCalendar();
-		cal.setTime(new Date());
-		// 24 hour clock
-		int hour = cal.get(Calendar.HOUR_OF_DAY);
-		// don't play at night
-		if (hour >= 11 && hour < 22) {
+		int currentHour = LocalTime.now(ZoneId.of("Europe/Berlin")).getHour();
+		// don't play at night (had too many sleepless nights)
+		int startTime = radioControllerProperties.getStartTimeToPlayMusic();
+		int endTime = radioControllerProperties.getEndTimeToPlayMusic();
+		if (currentHour >= startTime && currentHour < endTime) {
 			timeToPlay = true;
 		}
-		logger.debug("Time to play music: " + timeToPlay + "\t -> (hour >= 11 && hour < 22)");
+		LOGGER.debug("Time to play music: {} -> (current hour of day: {} >= {} && {} <= {})", timeToPlay, currentHour, startTime, currentHour,endTime);
 		return timeToPlay;
 	}
 }

@@ -13,19 +13,20 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
 import de.reiswich.homeautomation.stereo_control.stereo.RadioController;
+import de.reiswich.homeautomation.stereo_control.stereo.RadioControllerProperties;
 import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Socket;
 
 @org.springframework.context.annotation.Configuration
 @PropertySource("classpath:application.properties")
 public class Configuration {
-	
-	@Value( "${heos.ip}" )
+
+	@Value("${heos.ip}")
 	private String heosIp;
 
-	@Value( "${heos.port}" )
+	@Value("${heos.port}")
 	private int heosPort;
 
-	private Logger logger = LoggerFactory.getLogger(Configuration.class.getName());
+	private Logger LOGGER = LoggerFactory.getLogger(Configuration.class.getName());
 
 	@Bean
 	public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
@@ -34,11 +35,18 @@ public class Configuration {
 
 	@Bean
 	public RadioController getRadioController() {
-		logger.debug("initializing RadioController");
-		RadioController radioController = new RadioController(getMobileDevicesProperties(), playerControllerSocket());
+		LOGGER.debug("initializing RadioController");
+		RadioController radioController = new RadioController(getMobileDevicesProperties(),
+			playerControllerSocket(),
+			getRadioControllerProperties());
 		radioController.init();
-		logger.debug("RadioController initialized");
+		LOGGER.debug("RadioController initialized");
 		return radioController;
+	}
+
+	@Bean
+	public RadioControllerProperties getRadioControllerProperties() {
+		return new RadioControllerProperties();
 	}
 
 	@Bean
@@ -47,7 +55,7 @@ public class Configuration {
 	}
 
 	private Properties getMobileDevicesProperties() {
-		logger.debug("Trying to read MobileDevice-Properties");
+		LOGGER.debug("Trying to read MobileDevice-Properties");
 		Properties movileDevicesProps = new Properties();
 		try {
 			/*
@@ -56,9 +64,9 @@ public class Configuration {
 			 */
 			InputStream stream = new FileInputStream("./config/mobileDevices.properties");
 			movileDevicesProps.load(stream);
-			logger.debug("Loaded " + movileDevicesProps.entrySet().size() + " MobileDevices from properties");
+			LOGGER.debug("Loaded " + movileDevicesProps.entrySet().size() + " MobileDevices from properties");
 		} catch (IOException e) {
-			logger.error("Could not read MobileDevice-Properties file.", e);
+			LOGGER.error("Could not read MobileDevice-Properties file.", e);
 		}
 		return movileDevicesProps;
 	}

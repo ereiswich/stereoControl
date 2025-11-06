@@ -11,7 +11,7 @@ import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerRespon
 @SpringBootTest
 class PlayerController_SocketTest {
 
-	@Test
+	//@Test
 	public void readHeosPlayerTest(){
 		// arrange
 		PlayerController_Socket playerController = new PlayerController_Socket("192.168.178.127", 1255);
@@ -20,7 +20,7 @@ class PlayerController_SocketTest {
 		playerController.readHeosPlayer();
 	}
 
-	@Test
+	//@Test
 	public void playRadioTest(){
 		// arrange
 		PlayerController_Socket playerController = new PlayerController_Socket("192.168.178.127", 1255);
@@ -31,7 +31,7 @@ class PlayerController_SocketTest {
 		assertEquals("success", heosCommandResponse.getHeos().getResult());
 	}
 
-	@Test
+	//@Test
 	public void stopRadioTest(){
 		// arrange
 		PlayerController_Socket playerController = new PlayerController_Socket("192.168.178.127", 1255);

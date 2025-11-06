@@ -5,7 +5,7 @@
 
 	<groupId>de.reiswich.homeautomation</groupId>
 	<artifactId>stereo-control</artifactId>
-	<version>1.2.4</version>
+	<version>1.2.5</version>
 	<packaging>jar</packaging>
 
 	<name>stereo-control</name>
@@ -54,7 +54,11 @@
 
 	<build>
 		<resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
 			<resource>
+        <!-- er 06.11.2025: Spring lies zusätzlich application.properties aus diesem Directory -->
 				<directory>config</directory>
 			</resource>
 		</resources>
@@ -79,6 +83,22 @@
               <arguments>
                 <argument>target/stereo-control-${project.version}.jar</argument>
                 <argument>pi@192.168.178.37:/home/pi/projects/radioplay</argument>
+              </arguments>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>deploy-config-to-pi</id>
+            <phase>install</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>scp</executable>
+              <arguments>
+                <argument>config/application.properties</argument>
+                <argument>config/mobileDevices.properties</argument>
+                <argument>pi@192.168.178.37:/home/pi/projects/radioplay/config/</argument>
               </arguments>
             </configuration>
           </execution>
