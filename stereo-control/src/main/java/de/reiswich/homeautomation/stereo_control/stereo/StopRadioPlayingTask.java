@@ -7,6 +7,7 @@ import java.util.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.reiswich.homeautomation.stereo_control.stereo.api.IPlayerController;
 import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Socket;
 import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerResponse;
 
@@ -19,12 +20,12 @@ import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerRespon
  */
 public class StopRadioPlayingTask extends TimerTask {
 
-	private final PlayerController_Socket playerController;
+	private final IPlayerController playerController;
 	private Logger logger = LoggerFactory.getLogger(StopRadioPlayingTask.class);
 
 	private List<IStopPlayingRadioObserver> _observer = new ArrayList<IStopPlayingRadioObserver>();
 
-	public StopRadioPlayingTask(PlayerController_Socket playerController) {
+	public StopRadioPlayingTask(IPlayerController playerController) {
 		this.playerController = playerController;
 	}
 

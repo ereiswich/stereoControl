@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import de.reiswich.homeautomation.stereo_control.scanning.DetectIPhoneTask;
 import de.reiswich.homeautomation.stereo_control.scanning.IPhoneObserver;
+import de.reiswich.homeautomation.stereo_control.stereo.api.IPlayerController;
 import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Socket;
 import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerResponse;
 
@@ -24,11 +25,11 @@ public class RadioController implements IPhoneObserver {
 	private DetectIPhoneTask _scanIPhoneTask;
 	private DetectIPhoneTask _restartIPhoneScannerTask;
 	private Properties _mobileDevices;
-	private final PlayerController_Socket playerController;
+	private final IPlayerController playerController;
 	private final RadioControllerProperties radioControllerProperties;
 
 	public RadioController(Properties props,
-		PlayerController_Socket playerController,
+		IPlayerController playerController,
 		RadioControllerProperties radioControllerProperties) {
 		_mobileDevices = props;
 		this.playerController = playerController;

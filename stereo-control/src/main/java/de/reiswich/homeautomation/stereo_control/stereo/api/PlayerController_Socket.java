@@ -23,7 +23,8 @@ import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerRespon
  * @author reiswich
  *
  */
-public class PlayerController_Socket {
+@Deprecated
+public class PlayerController_Socket implements IPlayerController {
 	private final static Logger LOGGER = LoggerFactory.getLogger(PlayerController_Socket.class.getName());
 	private final String heosIp;
 	private final int heosPort;
@@ -38,7 +39,7 @@ public class PlayerController_Socket {
 		this.objectMapper = new ObjectMapper();
 	}
 
-	public HeosPlayerResponse readHeosPlayer() {
+	@Override public HeosPlayerResponse readHeosPlayer() {
 
 		String cmd = "heos://player/get_players";
 		HeosPlayerResponse playerResponse = null;
@@ -74,7 +75,7 @@ public class PlayerController_Socket {
 		return playerResponse;
 	}
 
-	public HeosCommandResponse playRadio(long playerId) {
+	@Override public HeosCommandResponse playRadio(long playerId) {
 		LOGGER.debug("play Radio with playerId: " + playerId);
 		int beatsRadioStationId = 1;
 		String cmd = "heos://browse/play_preset?pid=" + playerId + "&preset=" + beatsRadioStationId;
@@ -82,7 +83,7 @@ public class PlayerController_Socket {
 		return executeRadioPlayerCommand(playerId, cmd);
 	}
 
-	public HeosCommandResponse stopRadioPlayer(long playerId) {
+	@Override public HeosCommandResponse stopRadioPlayer(long playerId) {
 		LOGGER.debug("stop Radio with playerId: " + playerId);
 		String cmd = "heos://player/set_play_state?pid=" + playerId + "&state=stop";
 		return executeRadioPlayerCommand(playerId, cmd);

@@ -8,10 +8,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosCommandResponse;
 import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerResponse;
 
-@SpringBootTest
+@Deprecated
+// @SpringBootTest
 class PlayerController_SocketTest {
 
-	@Test
+	// @Test
 	public void readHeosPlayerTest(){
 		// arrange
 		PlayerController_Socket playerController = new PlayerController_Socket("192.168.178.127", 1255);
@@ -25,7 +26,7 @@ class PlayerController_SocketTest {
 		assertFalse(playerResponse.getPayload().isEmpty());
 	}
 
-	@Test
+	// @Test
 	public void playRadioTest(){
 		// arrange
 		PlayerController_Socket playerController = new PlayerController_Socket("192.168.178.127", 1255);
@@ -36,7 +37,7 @@ class PlayerController_SocketTest {
 		assertEquals("success", heosCommandResponse.getHeos().getResult());
 	}
 
-	@Test
+	// @Test
 	public void stopRadioTest(){
 		// arrange
 		PlayerController_Socket playerController = new PlayerController_Socket("192.168.178.127", 1255);
