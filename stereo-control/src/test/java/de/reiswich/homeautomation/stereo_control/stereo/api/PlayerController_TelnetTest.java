@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import org.junit.Before;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -15,6 +17,11 @@ import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerRespon
 class PlayerController_TelnetTest {
 
 	private PlayerController_Telnet playerController;
+
+	@BeforeEach
+	public void setUp() {
+		playerController = new PlayerController_Telnet("192.168.178.127", 1255);
+	}
 
 	@AfterEach
 	public void tearDown() {
@@ -64,5 +71,24 @@ class PlayerController_TelnetTest {
 		// assert
 		assertNotNull(heosCommandResponse);
 		assertEquals("success", heosCommandResponse.getHeos().getResult());
+	}
+
+	@Test
+	void testStaleConnection_ServerClosesConnection() throws Exception {
+		// arrange
+		HeosPlayerResponse firstResponse = playerController.readHeosPlayer();
+		assertNotNull(firstResponse);
+		assertEquals("success", firstResponse.getHeos().getResult());
+
+		// act
+		playerController.disconnect();
+
+		// Wait kurz, damit die Verbindung wirklich geschlossen wird
+		Thread.sleep(100);
+
+		// assert
+		HeosPlayerResponse secondResponse = playerController.readHeosPlayer();
+		assertNotNull(secondResponse, "Controller should reconnect after stale connection");
+		assertEquals("success", secondResponse.getHeos().getResult());
 	}
 }

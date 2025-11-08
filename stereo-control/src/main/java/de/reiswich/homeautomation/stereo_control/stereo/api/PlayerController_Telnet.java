@@ -53,7 +53,7 @@ public class PlayerController_Telnet implements IPlayerController {
 		LOGGER.info("Successfully connected to HEOS via Telnet");
 	}
 
-	private void disconnect() {
+	protected void disconnect() {
 		try {
 			if (reader != null) {
 				reader.close();
@@ -81,15 +81,21 @@ public class PlayerController_Telnet implements IPlayerController {
 
 				LOGGER.debug("Sending command (attempt {}/{}): {}", attempt, MAX_RETRIES, command);
 				writer.println(command);
+				writer.flush(); // Sicherstellen, dass der Befehl wirklich gesendet wird
+
 
 				String response = reader.readLine();
 				LOGGER.debug("Received response: {}", response);
+				if (response == null) {
+					// Verbindung wurde vom Server geschlossen
+					throw new IOException("Connection closed by server (readLine returned null)");
+				}
 
 				return response;
 
 			} catch (IOException e) {
 				LOGGER.error("Error sending command (attempt {}/{}): {}", attempt, MAX_RETRIES, e.getMessage());
-				disconnect();
+				disconnect(); // Wichtig: Bei Fehler Verbindung trennen, damit beim nächsten Versuch neu verbunden wird
 
 				if (attempt < MAX_RETRIES) {
 					waitBeforeRetry();

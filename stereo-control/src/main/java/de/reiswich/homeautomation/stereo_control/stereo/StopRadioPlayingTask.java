@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.reiswich.homeautomation.stereo_control.stereo.api.IPlayerController;
-import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Socket;
 import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerResponse;
 
 /**
@@ -21,8 +20,8 @@ import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerRespon
 public class StopRadioPlayingTask extends TimerTask {
 
 	private final IPlayerController playerController;
-	private Logger logger = LoggerFactory.getLogger(StopRadioPlayingTask.class);
-
+	private Logger LOGGER = LoggerFactory.getLogger(StopRadioPlayingTask.class);
+	private final int MAX_ATTEMPTS = 3;
 	private List<IStopPlayingRadioObserver> _observer = new ArrayList<IStopPlayingRadioObserver>();
 
 	public StopRadioPlayingTask(IPlayerController playerController) {
@@ -31,9 +30,22 @@ public class StopRadioPlayingTask extends TimerTask {
 
 	@Override
 	public void run() {
-		logger.info("Trying to stop music player");
-		HeosPlayerResponse playerResponse = playerController.readHeosPlayer();
-		playerController.stopRadioPlayer(playerResponse.getPayload().get(0).getPid());
+		LOGGER.info("Trying to stop music player");
+
+		for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+			try {
+				HeosPlayerResponse playerResponse = playerController.readHeosPlayer();
+				if(playerResponse != null || !playerResponse.getPayload().isEmpty()){
+					playerController.stopRadioPlayer(playerResponse.getPayload().get(0).getPid());
+				}
+				break;
+			} catch (Exception e) {
+				LOGGER.error("Failed to stop radio player on attempt {}/{}: {}", attempt, MAX_ATTEMPTS, e.getMessage());
+				if (attempt == MAX_ATTEMPTS) {
+					LOGGER.error("All attempts to stop radio player failed");
+				}
+			}
+		}
 
 		informObserver();
 	}
