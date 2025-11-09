@@ -37,4 +37,12 @@ public class HeosHeader {
 	public void setMessage(String message) {
 		this.message = message;
 	}
+
+	@Override public String toString() {
+		return "HeosHeader{" +
+			"command='" + command + '\'' +
+			", result='" + result + '\'' +
+			", message='" + message + '\'' +
+			'}';
+	}
 }

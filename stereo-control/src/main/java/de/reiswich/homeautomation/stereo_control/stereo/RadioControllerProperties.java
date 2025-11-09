@@ -12,6 +12,7 @@ public class RadioControllerProperties {
 	private int startTimeToPlayMusic;
 	private int endTimeToPlayMusic;
 	private int scanRateInSec;
+	private int playerPid;
 
 	public long getRestartAfterMinutes() {
 		return restartScanTaskAfterMinutes;
@@ -61,6 +62,14 @@ public class RadioControllerProperties {
 		this.scanRateInSec = scanRateInSec;
 	}
 
+	public int getPlayerPid() {
+		return playerPid;
+	}
+
+	public void setPlayerPid(int playerPid) {
+		this.playerPid = playerPid;
+	}
+
 	@Override public String toString() {
 		return "RadioControllerProperties{" +
 			"restartAfterMinutes=" + restartScanTaskAfterMinutes +
@@ -69,6 +78,7 @@ public class RadioControllerProperties {
 			", startTimeToPlayMusic=" + startTimeToPlayMusic +
 			", endTimeToPlayMusic=" + endTimeToPlayMusic +
 			", scanRateInSec=" + scanRateInSec +
+			", playerPid=" + playerPid +
 			'}';
 	}
 }

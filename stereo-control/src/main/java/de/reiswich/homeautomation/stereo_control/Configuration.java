@@ -17,7 +17,6 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import de.reiswich.homeautomation.stereo_control.stereo.RadioController;
 import de.reiswich.homeautomation.stereo_control.stereo.RadioControllerProperties;
 import de.reiswich.homeautomation.stereo_control.stereo.api.IPlayerController;
-import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Socket;
 import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Telnet;
 
 @org.springframework.context.annotation.Configuration
@@ -39,7 +38,6 @@ public class Configuration {
 
 	private PlayerController_Telnet playerControllerTelnet;
 
-
 	@Bean
 	public RadioController getRadioController() {
 		LOGGER.debug("initializing RadioController");
@@ -54,11 +52,6 @@ public class Configuration {
 	@Bean
 	public RadioControllerProperties getRadioControllerProperties() {
 		return new RadioControllerProperties();
-	}
-
-	// @Bean
-	public PlayerController_Socket playerControllerSocket() {
-		return new PlayerController_Socket(heosIp, heosPort);
 	}
 
 	@Bean

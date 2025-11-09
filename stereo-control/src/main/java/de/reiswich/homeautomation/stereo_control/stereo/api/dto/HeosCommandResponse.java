@@ -17,4 +17,9 @@ public class HeosCommandResponse {
 	public void setHeos(HeosHeader heos) {
 		this.heos = heos;
 	}
+
+	@Override
+	public String toString() {
+		return "HeosCommandResponse [heos=" + heos + "]";
+	}
 }

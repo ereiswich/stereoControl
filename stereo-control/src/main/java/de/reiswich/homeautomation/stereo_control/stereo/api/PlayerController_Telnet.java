@@ -1,16 +1,23 @@
 package de.reiswich.homeautomation.stereo_control.stereo.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosCommandResponse;
-import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerResponse;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.net.telnet.TelnetClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosCommandResponse;
+import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerResponse;
 
 public class PlayerController_Telnet implements IPlayerController {
 
@@ -31,6 +38,7 @@ public class PlayerController_Telnet implements IPlayerController {
 		this.heosIp = heosIp;
 		this.heosPort = heosPort;
 		this.objectMapper = new ObjectMapper();
+		this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	}
 
 	private void connect() throws IOException {
@@ -83,7 +91,6 @@ public class PlayerController_Telnet implements IPlayerController {
 				writer.println(command);
 				writer.flush(); // Sicherstellen, dass der Befehl wirklich gesendet wird
 
-
 				String response = reader.readLine();
 				LOGGER.debug("Received response: {}", response);
 				if (response == null) {
@@ -109,6 +116,29 @@ public class PlayerController_Telnet implements IPlayerController {
 	}
 
 	@Override
+	public HeosCommandResponse playRadio(long playerId) {
+		LOGGER.debug("Playing radio with playerId: {}", playerId);
+		int beatsRadioStationId = 1;
+		String command = String.format("heos://browse/play_preset?pid=%d&preset=%d",
+			playerId, beatsRadioStationId);
+
+		LOGGER.debug("Executing HEOS command: {}", command);
+
+		try {
+			String response = sendCommand(command);
+			return objectMapper.readValue(response, HeosCommandResponse.class);
+
+		} catch (IOException e) {
+			LOGGER.error("Error executing HEOS command: {}", e.getMessage(), e);
+			return null;
+		}
+	}
+
+	/**
+	 * just for tests
+	 *
+	 * @return
+	 */
 	public HeosPlayerResponse readHeosPlayer() {
 		String command = "heos://player/get_players";
 		LOGGER.debug("Reading HEOS players");
@@ -124,32 +154,13 @@ public class PlayerController_Telnet implements IPlayerController {
 	}
 
 	@Override
-	public HeosCommandResponse playRadio(long playerId) {
-		LOGGER.debug("Playing radio with playerId: {}", playerId);
-		int beatsRadioStationId = 1;
-		String command = String.format("heos://browse/play_preset?pid=%d&preset=%d",
-			playerId, beatsRadioStationId);
-
-		return executeRadioPlayerCommand(command);
-	}
-
-	@Override
-	public HeosCommandResponse stopRadioPlayer(long playerId) {
-		LOGGER.debug("Stopping radio player with playerId: {}", playerId);
+	public HeosCommandResponse stopRadio(long playerId) {
 		String command = String.format("heos://player/set_play_state?pid=%d&state=stop", playerId);
-
-		return executeRadioPlayerCommand(command);
-	}
-
-	protected HeosCommandResponse executeRadioPlayerCommand(String command) {
-		LOGGER.debug("Executing HEOS command: {}", command);
+		LOGGER.debug("Stopping radio player with playerId: {} and command: {}", playerId, command);
 
 		try {
 			String response = sendCommand(command);
-			HeosCommandResponse heosResponse = objectMapper.readValue(response, HeosCommandResponse.class);
-			LOGGER.debug("HEOS response: {}", heosResponse.getHeos().getResult());
-
-			return heosResponse;
+			return objectMapper.readValue(response, HeosCommandResponse.class);
 
 		} catch (IOException e) {
 			LOGGER.error("Error executing HEOS command: {}", e.getMessage(), e);

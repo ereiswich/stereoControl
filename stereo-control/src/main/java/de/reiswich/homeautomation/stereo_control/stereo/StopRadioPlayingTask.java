@@ -8,24 +8,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.reiswich.homeautomation.stereo_control.stereo.api.IPlayerController;
-import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerResponse;
+import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosCommandResponse;
 
 /**
  * Stops playing radio after x minutes. Otherwise the radio player will never
  * end and has to be stopped manually.
- * 
+ *
  * @author reiswich
- * 
+ *
  */
 public class StopRadioPlayingTask extends TimerTask {
 
 	private final IPlayerController playerController;
+	private final int playerPid;
 	private Logger LOGGER = LoggerFactory.getLogger(StopRadioPlayingTask.class);
 	private final int MAX_ATTEMPTS = 3;
 	private List<IStopPlayingRadioObserver> _observer = new ArrayList<IStopPlayingRadioObserver>();
 
-	public StopRadioPlayingTask(IPlayerController playerController) {
+	public StopRadioPlayingTask(IPlayerController playerController, int playerPid) {
 		this.playerController = playerController;
+		this.playerPid = playerPid;
 	}
 
 	@Override
@@ -34,10 +36,9 @@ public class StopRadioPlayingTask extends TimerTask {
 
 		for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
 			try {
-				HeosPlayerResponse playerResponse = playerController.readHeosPlayer();
-				if(playerResponse != null || !playerResponse.getPayload().isEmpty()){
-					playerController.stopRadioPlayer(playerResponse.getPayload().get(0).getPid());
-				}
+				HeosCommandResponse heosCommandResponse = playerController.stopRadio(playerPid);
+				LOGGER.debug("stopRadio command response: {}", heosCommandResponse);
+
 				break;
 			} catch (Exception e) {
 				LOGGER.error("Failed to stop radio player on attempt {}/{}: {}", attempt, MAX_ATTEMPTS, e.getMessage());

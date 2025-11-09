@@ -2,9 +2,6 @@ package de.reiswich.homeautomation.stereo_control.stereo;
 
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
@@ -15,8 +12,7 @@ import org.slf4j.LoggerFactory;
 import de.reiswich.homeautomation.stereo_control.scanning.DetectIPhoneTask;
 import de.reiswich.homeautomation.stereo_control.scanning.IPhoneObserver;
 import de.reiswich.homeautomation.stereo_control.stereo.api.IPlayerController;
-import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Socket;
-import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerResponse;
+import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosCommandResponse;
 
 public class RadioController implements IPhoneObserver {
 	private Logger LOGGER = LoggerFactory.getLogger(RadioController.class.getName());
@@ -88,17 +84,15 @@ public class RadioController implements IPhoneObserver {
 	private void startRadioPlayer() {
 		LOGGER.debug("startRadioPlayer with HEOS-API");
 
-		HeosPlayerResponse playerResponse = playerController.readHeosPlayer();
-		if(playerResponse != null || !playerResponse.getPayload().isEmpty()){
-			playerController.playRadio(playerResponse.getPayload().get(0).getPid());
-		}
+		HeosCommandResponse heosCommandResponse = playerController.playRadio(radioControllerProperties.getPlayerPid());
+		LOGGER.debug("playRadio command response: {}", heosCommandResponse);
 	}
 
 	/*
 	 * Stoppe radio nach 90 Minuten, damit es nicht die ganze Nacht durchläuft
 	 */
 	private void initStopPlayingTask() {
-		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask(playerController);
+		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask(playerController, radioControllerProperties.getPlayerPid());
 
 		stopRadioPlaying.addObserver(new IStopPlayingRadioObserver() {
 			@Override
@@ -172,7 +166,7 @@ public class RadioController implements IPhoneObserver {
 		if (currentHour >= startTime && currentHour < endTime) {
 			timeToPlay = true;
 		}
-		LOGGER.debug("Time to play music: {} -> (current hour of day: {} >= {} && {} <= {})", timeToPlay, currentHour, startTime, currentHour,endTime);
+		LOGGER.debug("Time to play music: {} -> (current hour of day: {} >= {} && {} <= {})", timeToPlay, currentHour, startTime, currentHour, endTime);
 		return timeToPlay;
 	}
 }
