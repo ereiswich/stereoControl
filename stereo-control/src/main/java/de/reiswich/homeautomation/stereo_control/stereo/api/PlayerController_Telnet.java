@@ -134,6 +134,23 @@ public class PlayerController_Telnet implements IPlayerController {
 		}
 	}
 
+	public HeosCommandResponse setVolume(long playerId, int volume) {
+		LOGGER.debug("Set radio volume with playerId: {} and volume: {}", playerId, volume);
+		String command = String.format("heos://player/set_volume?pid=%d&level=%d",
+			playerId, volume);
+
+		LOGGER.debug("Executing HEOS command: {}", command);
+
+		try {
+			String response = sendCommand(command);
+			return objectMapper.readValue(response, HeosCommandResponse.class);
+
+		} catch (IOException e) {
+			LOGGER.error("Error executing HEOS command: {}", e.getMessage(), e);
+			return null;
+		}
+	}
+
 	/**
 	 * just for tests
 	 *

@@ -83,8 +83,12 @@ public class RadioController implements IPhoneObserver {
 
 	private void startRadioPlayer() {
 		LOGGER.debug("startRadioPlayer with HEOS-API");
-
+		int volume = 30; // range is 0-100
 		HeosCommandResponse heosCommandResponse = playerController.playRadio(radioControllerProperties.getPlayerPid());
+
+		if (heosCommandResponse != null && heosCommandResponse.getHeos().getResult().equals("success")) {
+			playerController.setVolume(radioControllerProperties.getPlayerPid(), volume);
+		}
 		LOGGER.debug("playRadio command response: {}", heosCommandResponse);
 	}
 
