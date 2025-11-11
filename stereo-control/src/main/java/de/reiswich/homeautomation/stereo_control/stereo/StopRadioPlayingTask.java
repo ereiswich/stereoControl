@@ -37,7 +37,7 @@ public class StopRadioPlayingTask extends TimerTask {
 		for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
 			try {
 				HeosCommandResponse heosCommandResponse = playerController.stopRadio(playerPid);
-				LOGGER.debug("stopRadio command response: {}", heosCommandResponse);
+				LOGGER.info("stopRadio command response: {}", heosCommandResponse);
 
 				break;
 			} catch (Exception e) {

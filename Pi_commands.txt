@@ -14,7 +14,7 @@ Passwort: 4erxxxxxxx
 scp -r /config pi@192.168.178.77:/home/pi/projects/radioplay
 
 // ssh
-ssh pi@192.168.178.23
+ssh 'pi@192.168.178.37'
 
 // MPD-Playlist Directory: 
 /var/lib/mpd/playlists

@@ -44,7 +44,7 @@ public class RadioController implements IPhoneObserver {
 			LOGGER.info("Time to play music = true. Stop scanning and start playing radio");
 			stopScanning();
 			startRadioPlayer();
-			initStopPlayingTask();
+			initStopPlayingAndRestartScanningTask();
 
 		} else {
 			LOGGER.info("Time to play music = false. Restart scanning.");
@@ -82,28 +82,23 @@ public class RadioController implements IPhoneObserver {
 	}
 
 	private void startRadioPlayer() {
-		LOGGER.debug("startRadioPlayer with HEOS-API");
+		LOGGER.info("startRadioPlayer with HEOS-API");
 		int volume = 30; // range is 0-100
 		HeosCommandResponse heosCommandResponse = playerController.playRadio(radioControllerProperties.getPlayerPid());
 
 		if (heosCommandResponse != null && heosCommandResponse.getHeos().getResult().equals("success")) {
 			playerController.setVolume(radioControllerProperties.getPlayerPid(), volume);
 		}
-		LOGGER.debug("playRadio command response: {}", heosCommandResponse);
+		LOGGER.info("playRadio command response: {}", heosCommandResponse);
 	}
 
 	/*
 	 * Stoppe radio nach 90 Minuten, damit es nicht die ganze Nacht durchläuft
 	 */
-	private void initStopPlayingTask() {
+	private void initStopPlayingAndRestartScanningTask() {
 		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask(playerController, radioControllerProperties.getPlayerPid());
 
-		stopRadioPlaying.addObserver(new IStopPlayingRadioObserver() {
-			@Override
-			public void radioPlayingStopped() {
-				initRestartScanning();
-			}
-		});
+		stopRadioPlaying.addObserver(this::initRestartScanning);
 
 		long minutesForRestartInMillis = TimeUnit.MINUTES.toMillis(radioControllerProperties.getRestartAfterMinutes());
 		_scanIPhoneTimer.schedule(stopRadioPlaying, minutesForRestartInMillis);
@@ -129,13 +124,13 @@ public class RadioController implements IPhoneObserver {
 			@Override
 			public void iPhoneOffline() {
 				pingFailedCounter++;
-				LOGGER.info("iPhone connection lost. Setting ping failed counter to: " + pingFailedCounter);
+				LOGGER.debug("iPhone connection lost. Setting ping failed counter to: " + pingFailedCounter);
 				/*
 				 * Ping may fail. Don't restart iPhone scanner immediately. Failing e.g. ten
 				 * times is more unlikely, thus iPhone is truly out of range.
 				 */
 				if (pingFailedCounter >= radioControllerProperties.getPingFailCounter()) {
-					LOGGER.info(
+					LOGGER.debug(
 						"Ping failed counter >= " + radioControllerProperties.getPingFailCounter() + ". \n Cancel restart iPhone scanner task. \n Start scanning iPhone.");
 					_restartIPhoneScannerTask.cancel();
 					startScanning(0);
