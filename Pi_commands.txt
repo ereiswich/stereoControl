@@ -18,3 +18,7 @@ ssh 'pi@192.168.178.37'
 
 // MPD-Playlist Directory: 
 /var/lib/mpd/playlists
+
+// JAVA Prozess
+ps aux | grep java // PID rausfinden
+jstack <PID> // stacktrace zum Javaprozess

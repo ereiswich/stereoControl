@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +19,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Ping the iPhone each x minutes. After it finds the iPhone, observers are
  * informed.
- * 
+ *
  * @author ereiswich
- * 
+ *
  */
 public class DetectIPhoneTask extends TimerTask {
 	private Logger logger = LoggerFactory.getLogger(DetectIPhoneTask.class.getName());
@@ -42,52 +43,66 @@ public class DetectIPhoneTask extends TimerTask {
 		logger.debug("Running Scan IPhones task...");
 		List<Boolean> pingResults = new ArrayList<>();
 		for (Entry<Object, Object> deviceKeySet : _mobileDevices.entrySet()) {
-			boolean pingResult = pingMobileDevice((String)deviceKeySet.getKey(), (String)deviceKeySet.getValue());
+			boolean pingResult = pingMobileDevice((String) deviceKeySet.getKey(), (String) deviceKeySet.getValue());
 			pingResults.add(pingResult);
 		}
 
 		boolean iPhoneDetected = false;
 		for (Boolean pingResult : pingResults) {
-			if(pingResult == true){
+			if (pingResult == true) {
 				iPhoneDetected = true;
 			}
 		}
-		
-		if(iPhoneDetected){
+
+		if (iPhoneDetected) {
 			handleIPhoneOnline();
-		}else{
+		} else {
 			handleIPhoneOffline();
 		}
 	}
 
 	private boolean pingMobileDevice(String mobileDeviceOwner, String deviceMacAdress) {
 		boolean pingResult = false;
+		Process process = null;
 		try {
 			// Bluetooth-MAC-Adresse ist die richtige
 			String pingString = "sudo l2ping -c 1 " + deviceMacAdress;
-			Process process = Runtime.getRuntime().exec(pingString);
-			process.waitFor();
-			InputStream in = process.getInputStream();
-			InputStreamReader inReader = new InputStreamReader(in);
-			BufferedReader bufReader = new BufferedReader(inReader);
+			process = Runtime.getRuntime().exec(pingString);
+			boolean finished = process.waitFor(10, TimeUnit.SECONDS);
+			if (finished) {
+				try (InputStream in = process.getInputStream()) {
+					InputStreamReader inReader = new InputStreamReader(in);
+					BufferedReader bufReader = new BufferedReader(inReader);
 
-			// erste Zeile langt, um zu erkennen, ob iPhone online oder offline
-			// ist
-			String line = bufReader.readLine();
-			if (line != null) {
-				if (line.startsWith("Ping: " + deviceMacAdress)) {
-					logger.debug("... scanning: " + mobileDeviceOwner + " iPhone detected");
-					pingResult = true;
-				} else if (line.startsWith("Can't connect")) {
-					logger.debug("... scanning: " + mobileDeviceOwner + " iPhone not found");
-					pingResult = false;
+					// erste Zeile langt, um zu erkennen, ob iPhone online oder offline
+					// ist
+					String line = bufReader.readLine();
+					if (line != null) {
+						if (line.startsWith("Ping: " + deviceMacAdress)) {
+							logger.debug("... scanning: " + mobileDeviceOwner + " iPhone detected");
+							pingResult = true;
+						} else if (line.startsWith("Can't connect")) {
+							logger.debug("... scanning: " + mobileDeviceOwner + " iPhone not found");
+						}
+					} else {
+						logger.debug("Ping return line is null");
+					}
 				}
+
 			} else {
-				logger.debug("Ping return line is null");
-				pingResult = false;
+				logger.warn("Ping timeout for device: " + mobileDeviceOwner);
+				process.destroyForcibly();
 			}
+
 		} catch (IOException | InterruptedException e) {
 			logger.error(e.getMessage());
+			if (e instanceof InterruptedException) {
+				Thread.currentThread().interrupt();
+			}
+		} finally {
+			if (process != null && process.isAlive()) {
+				process.destroyForcibly();
+			}
 		}
 		return pingResult;
 	}

@@ -71,7 +71,6 @@ public class RadioController implements IPhoneObserver {
 	}
 
 	private void startScanning(long delay) {
-		LOGGER.info("Initializing scanning tasks");
 		_scanIPhoneTask = new DetectIPhoneTask(_mobileDevices);
 		_scanIPhoneTask.addIPhoneObserver(this);
 
@@ -79,6 +78,7 @@ public class RadioController implements IPhoneObserver {
 		// scan every x-seconds
 		long scanRateInMillis = TimeUnit.SECONDS.toMillis(radioControllerProperties.getScanRateInSec());
 		_scanIPhoneTimer.schedule(_scanIPhoneTask, delay, scanRateInMillis);
+		LOGGER.info("Initializing DetectIPhoneTask tasks with scan rate: {} seconds", radioControllerProperties.getScanRateInSec());
 	}
 
 	private void startRadioPlayer() {
@@ -130,8 +130,9 @@ public class RadioController implements IPhoneObserver {
 				 * times is more unlikely, thus iPhone is truly out of range.
 				 */
 				if (pingFailedCounter >= radioControllerProperties.getPingFailCounter()) {
-					LOGGER.debug(
-						"Ping failed counter >= " + radioControllerProperties.getPingFailCounter() + ". \n Cancel restart iPhone scanner task. \n Start scanning iPhone.");
+					LOGGER.info(
+						"Ping failed counter >= " + radioControllerProperties.getPingFailCounter() + ", smartPhone truly out of range. "
+							+ "\n Start scanning iPhone.");
 					_restartIPhoneScannerTask.cancel();
 					startScanning(0);
 				}
