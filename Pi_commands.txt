@@ -8,8 +8,6 @@ ifconfig
 // File kopieren - aktuell über die POM.XML gelöst. 
 scp stereo-control-1.1.7.jar pi@192.168.178.37:/home/pi/projects/radioplay
 
-Passwort: 4erxxxxxxx
-
 // Ordner kopieren
 scp -r /config pi@192.168.178.77:/home/pi/projects/radioplay
 
