@@ -19,6 +19,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosCommandResponse;
 import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerResponse;
 
+/**
+ * HEOS API Documentation:
+ * https://rn.dmglobal.com/usmodel/HEOS_CLI_ProtocolSpecification-Version-1.17.pdf
+ */
 public class PlayerController_Telnet implements IPlayerController {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(PlayerController_Telnet.class);

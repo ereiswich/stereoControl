@@ -86,9 +86,10 @@ public class RadioController implements IPhoneObserver {
 		int volume = 30; // range is 0-100
 		HeosCommandResponse heosCommandResponse = playerController.playRadio(radioControllerProperties.getPlayerPid());
 
-		if (heosCommandResponse != null && heosCommandResponse.getHeos().getResult().equals("success")) {
-			playerController.setVolume(radioControllerProperties.getPlayerPid(), volume);
-		}
+		// er 18.11.2025 Lautstärke ist im Denon gesetzt
+		//		if (heosCommandResponse != null && heosCommandResponse.getHeos().getResult().equals("success")) {
+		//			playerController.setVolume(radioControllerProperties.getPlayerPid(), volume);
+		//		}
 		LOGGER.info("playRadio command response: {}", heosCommandResponse);
 	}
 

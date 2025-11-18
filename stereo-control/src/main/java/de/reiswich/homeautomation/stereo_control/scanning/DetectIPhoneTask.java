@@ -66,8 +66,9 @@ public class DetectIPhoneTask extends TimerTask {
 		Process process = null;
 		try {
 			// Bluetooth-MAC-Adresse ist die richtige
-			String pingString = "sudo l2ping -c 1 " + deviceMacAdress;
-			process = Runtime.getRuntime().exec(pingString);
+			// String l2PingString = "sudo l2ping -c 1 " + deviceMacAdress;
+			String hciToolPingString = "sudo hcitool name " + deviceMacAdress;
+			process = Runtime.getRuntime().exec(hciToolPingString);
 			boolean finished = process.waitFor(10, TimeUnit.SECONDS);
 			if (finished) {
 				try (InputStream in = process.getInputStream()) {
@@ -77,15 +78,11 @@ public class DetectIPhoneTask extends TimerTask {
 					// erste Zeile langt, um zu erkennen, ob iPhone online oder offline
 					// ist
 					String line = bufReader.readLine();
-					if (line != null) {
-						if (line.startsWith("Ping: " + deviceMacAdress)) {
-							logger.debug("... scanning: " + mobileDeviceOwner + " iPhone detected");
-							pingResult = true;
-						} else if (line.startsWith("Can't connect")) {
-							logger.debug("... scanning: " + mobileDeviceOwner + " iPhone not found");
-						}
+					if (line != null && !line.isEmpty()) {
+						pingResult = true;
+						logger.debug("... scanning: " + mobileDeviceOwner + " iPhone detected");
 					} else {
-						logger.debug("Ping return line is null");
+						logger.debug("Ping return line is: " + line);
 					}
 				}
 
