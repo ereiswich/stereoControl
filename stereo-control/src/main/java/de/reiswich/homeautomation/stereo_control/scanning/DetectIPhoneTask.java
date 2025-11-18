@@ -47,12 +47,7 @@ public class DetectIPhoneTask extends TimerTask {
 			pingResults.add(pingResult);
 		}
 
-		boolean iPhoneDetected = false;
-		for (Boolean pingResult : pingResults) {
-			if (pingResult == true) {
-				iPhoneDetected = true;
-			}
-		}
+		boolean iPhoneDetected = pingResults.contains(true);
 
 		if (iPhoneDetected) {
 			handleIPhoneOnline();
@@ -74,15 +69,13 @@ public class DetectIPhoneTask extends TimerTask {
 				try (InputStream in = process.getInputStream()) {
 					InputStreamReader inReader = new InputStreamReader(in);
 					BufferedReader bufReader = new BufferedReader(inReader);
-
-					// erste Zeile langt, um zu erkennen, ob iPhone online oder offline
-					// ist
+ 
 					String line = bufReader.readLine();
 					if (line != null && !line.isEmpty()) {
 						pingResult = true;
-						logger.debug("... scanning: " + mobileDeviceOwner + " iPhone detected");
+						logger.debug("Mobile device for owner: {} detected", mobileDeviceOwner);
 					} else {
-						logger.debug("Ping return line is: " + line);
+						logger.debug("Ping for mobile device owner: {} return line is: {} ", mobileDeviceOwner, line);
 					}
 				}
 

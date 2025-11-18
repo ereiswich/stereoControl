@@ -41,7 +41,7 @@ public class RadioController implements IPhoneObserver {
 	public void iPhoneDetected() {
 		LOGGER.info("\n \t >>> iPhone found. Check if it's time to play music.");
 		if (isTimeToPlayMusic()) {
-			LOGGER.info("Time to play music = true. Stop scanning and start playing radio");
+			LOGGER.info("Stop scanning and start playing radio");
 			stopScanning();
 			startRadioPlayer();
 			initStopPlayingAndRestartScanningTask();
@@ -82,11 +82,11 @@ public class RadioController implements IPhoneObserver {
 	}
 
 	private void startRadioPlayer() {
-		LOGGER.info("startRadioPlayer with HEOS-API");
-		int volume = 30; // range is 0-100
+		LOGGER.info("startRadioPlayer with HEOS-API and playerId: {}", this.radioControllerProperties.getPlayerPid());
 		HeosCommandResponse heosCommandResponse = playerController.playRadio(radioControllerProperties.getPlayerPid());
 
 		// er 18.11.2025 Lautstärke ist im Denon gesetzt
+		// int volume = 30; // range is 0-100
 		//		if (heosCommandResponse != null && heosCommandResponse.getHeos().getResult().equals("success")) {
 		//			playerController.setVolume(radioControllerProperties.getPlayerPid(), volume);
 		//		}
