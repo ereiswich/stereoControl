@@ -16,18 +16,22 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
 import de.reiswich.homeautomation.stereo_control.stereo.RadioController;
 import de.reiswich.homeautomation.stereo_control.stereo.RadioControllerProperties;
+import de.reiswich.homeautomation.stereo_control.stereo.api.DenonAvrController_Telnet;
+import de.reiswich.homeautomation.stereo_control.stereo.api.HeosPlayerController_Telnet;
 import de.reiswich.homeautomation.stereo_control.stereo.api.IPlayerController;
-import de.reiswich.homeautomation.stereo_control.stereo.api.PlayerController_Telnet;
 
 @org.springframework.context.annotation.Configuration
 @PropertySource("classpath:application.properties")
 public class Configuration {
 
-	@Value("${heos.ip}")
-	private String heosIp;
+	@Value("${denon.ip}")
+	private String denonIp;
 
 	@Value("${heos.port}")
 	private int heosPort;
+
+	@Value("${denon.port}")
+	private int denonPort;
 
 	private Logger LOGGER = LoggerFactory.getLogger(Configuration.class.getName());
 
@@ -36,13 +40,15 @@ public class Configuration {
 		return new PropertySourcesPlaceholderConfigurer();
 	}
 
-	private PlayerController_Telnet playerControllerTelnet;
+	private HeosPlayerController_Telnet playerControllerTelnet;
+	private DenonAvrController_Telnet denonAvrController;
 
 	@Bean
 	public RadioController getRadioController() {
 		LOGGER.debug("initializing RadioController");
 		RadioController radioController = new RadioController(getMobileDevicesProperties(),
 			playerControllerTelnet(),
+			denonAvrControllerTelnet(),
 			getRadioControllerProperties());
 		radioController.init();
 		LOGGER.debug("RadioController initialized");
@@ -57,9 +63,17 @@ public class Configuration {
 	@Bean
 	public IPlayerController playerControllerTelnet() {
 		if (playerControllerTelnet == null) {
-			playerControllerTelnet = new PlayerController_Telnet(heosIp, heosPort);
+			playerControllerTelnet = new HeosPlayerController_Telnet(denonIp, heosPort);
 		}
 		return playerControllerTelnet;
+	}
+
+	@Bean
+	public DenonAvrController_Telnet denonAvrControllerTelnet() {
+		if (denonAvrController == null) {
+			denonAvrController = new DenonAvrController_Telnet(denonIp, denonPort);
+		}
+		return denonAvrController;
 	}
 
 	@PreDestroy

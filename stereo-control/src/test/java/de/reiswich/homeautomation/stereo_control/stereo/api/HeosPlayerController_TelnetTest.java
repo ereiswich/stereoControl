@@ -12,14 +12,14 @@ import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosCommandRespo
 import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerResponse;
 
 @SpringBootTest
-class PlayerController_TelnetTest {
+class HeosPlayerController_TelnetTest {
 
-	private PlayerController_Telnet playerController;
+	private HeosPlayerController_Telnet playerController;
 	private int playerPid = 860255418;
 
 	@BeforeEach
 	public void setUp() {
-		playerController = new PlayerController_Telnet("192.168.178.127", 1255);
+		playerController = new HeosPlayerController_Telnet("192.168.178.127", 1255);
 	}
 
 	@AfterEach
@@ -33,7 +33,7 @@ class PlayerController_TelnetTest {
 	@Test
 	public void playRadioTest() {
 		// arrange
-		playerController = new PlayerController_Telnet("192.168.178.127", 1255);
+		playerController = new HeosPlayerController_Telnet("192.168.178.127", 1255);
 
 		// act
 		HeosCommandResponse heosCommandResponse = playerController.playRadio(playerPid);
@@ -46,7 +46,7 @@ class PlayerController_TelnetTest {
 	@Test
 	public void stopRadioTest() {
 		// arrange
-		playerController = new PlayerController_Telnet("192.168.178.127", 1255);
+		playerController = new HeosPlayerController_Telnet("192.168.178.127", 1255);
 
 		// act
 		HeosCommandResponse heosCommandResponse = playerController.stopRadio(playerPid);

@@ -7,6 +7,7 @@ import java.util.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.reiswich.homeautomation.stereo_control.stereo.api.DenonAvrController_Telnet;
 import de.reiswich.homeautomation.stereo_control.stereo.api.IPlayerController;
 import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosCommandResponse;
 
@@ -20,24 +21,30 @@ import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosCommandRespo
 public class StopRadioPlayingTask extends TimerTask {
 
 	private final IPlayerController playerController;
+	private final DenonAvrController_Telnet denonAvrController;
 	private final int playerPid;
 	private Logger LOGGER = LoggerFactory.getLogger(StopRadioPlayingTask.class);
 	private final int MAX_ATTEMPTS = 3;
 	private List<IStopPlayingRadioObserver> _observer = new ArrayList<IStopPlayingRadioObserver>();
 
-	public StopRadioPlayingTask(IPlayerController playerController, int playerPid) {
+	public StopRadioPlayingTask(IPlayerController playerController, DenonAvrController_Telnet denonAvrController, int playerPid) {
 		this.playerController = playerController;
+		this.denonAvrController = denonAvrController;
 		this.playerPid = playerPid;
 	}
 
 	@Override
 	public void run() {
-		LOGGER.info("Trying to stop music player");
 
 		for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
 			try {
+				LOGGER.debug("Trying to turn off Denon AVR music player");
+				String avrResponse = denonAvrController.turnOffAvr();
+				LOGGER.debug("Turn Off command AVR response: {}", avrResponse);
+
+				LOGGER.debug("Trying to switch off music player");
 				HeosCommandResponse heosCommandResponse = playerController.stopRadio(playerPid);
-				LOGGER.info("stopRadio command response: {}", heosCommandResponse);
+				LOGGER.debug("stopRadio command response: {}", heosCommandResponse);
 
 				break;
 			} catch (Exception e) {

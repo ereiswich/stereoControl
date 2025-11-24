@@ -20,3 +20,9 @@ ssh 'pi@192.168.178.37'
 // JAVA Prozess
 ps aux | grep java // PID rausfinden
 jstack <PID> // stacktrace zum Javaprozess
+
+// PI PW
+4erXXXXXX
+
+// l2ping
+sudo l2ping -c 1 68:EF:DC:BE:2D:5D

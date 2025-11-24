@@ -23,9 +23,9 @@ import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosPlayerRespon
  * HEOS API Documentation:
  * https://rn.dmglobal.com/usmodel/HEOS_CLI_ProtocolSpecification-Version-1.17.pdf
  */
-public class PlayerController_Telnet implements IPlayerController {
+public class HeosPlayerController_Telnet implements IPlayerController {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(PlayerController_Telnet.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(HeosPlayerController_Telnet.class);
 	private static final int CONNECTION_TIMEOUT = 5000;
 	private static final int MAX_RETRIES = 3;
 	private static final int RETRY_DELAY_MS = 2000;
@@ -38,7 +38,7 @@ public class PlayerController_Telnet implements IPlayerController {
 	private BufferedReader reader;
 	private PrintWriter writer;
 
-	public PlayerController_Telnet(String heosIp, int heosPort) {
+	public HeosPlayerController_Telnet(String heosIp, int heosPort) {
 		this.heosIp = heosIp;
 		this.heosPort = heosPort;
 		this.objectMapper = new ObjectMapper();

@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import de.reiswich.homeautomation.stereo_control.scanning.DetectIPhoneTask;
 import de.reiswich.homeautomation.stereo_control.scanning.IPhoneObserver;
+import de.reiswich.homeautomation.stereo_control.stereo.api.DenonAvrController_Telnet;
 import de.reiswich.homeautomation.stereo_control.stereo.api.IPlayerController;
 import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosCommandResponse;
 
@@ -22,13 +23,15 @@ public class RadioController implements IPhoneObserver {
 	private DetectIPhoneTask _restartIPhoneScannerTask;
 	private Properties _mobileDevices;
 	private final IPlayerController playerController;
+	private final DenonAvrController_Telnet denonAvrController;
 	private final RadioControllerProperties radioControllerProperties;
 
 	public RadioController(Properties props,
 		IPlayerController playerController,
-		RadioControllerProperties radioControllerProperties) {
+		DenonAvrController_Telnet denonAvrController, RadioControllerProperties radioControllerProperties) {
 		_mobileDevices = props;
 		this.playerController = playerController;
+		this.denonAvrController = denonAvrController;
 		this.radioControllerProperties = radioControllerProperties;
 		LOGGER.debug("RadioControllerproperties:  {}", radioControllerProperties);
 	}
@@ -82,14 +85,13 @@ public class RadioController implements IPhoneObserver {
 	}
 
 	private void startRadioPlayer() {
+		LOGGER.info("Switching on Denon AVR ...");
+		String response = denonAvrController.turnOnAvr();
+		LOGGER.debug("Turn on command response from Denon AVR: {}", response);
+
 		LOGGER.info("startRadioPlayer with HEOS-API and playerId: {}", this.radioControllerProperties.getPlayerPid());
 		HeosCommandResponse heosCommandResponse = playerController.playRadio(radioControllerProperties.getPlayerPid());
 
-		// er 18.11.2025 Lautstärke ist im Denon gesetzt
-		// int volume = 30; // range is 0-100
-		//		if (heosCommandResponse != null && heosCommandResponse.getHeos().getResult().equals("success")) {
-		//			playerController.setVolume(radioControllerProperties.getPlayerPid(), volume);
-		//		}
 		LOGGER.info("playRadio command response: {}", heosCommandResponse);
 	}
 
@@ -97,7 +99,7 @@ public class RadioController implements IPhoneObserver {
 	 * Stoppe radio nach 90 Minuten, damit es nicht die ganze Nacht durchläuft
 	 */
 	private void initStopPlayingAndRestartScanningTask() {
-		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask(playerController, radioControllerProperties.getPlayerPid());
+		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask(playerController, denonAvrController, radioControllerProperties.getPlayerPid());
 
 		stopRadioPlaying.addObserver(this::initRestartScanning);
 
