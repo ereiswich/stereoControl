@@ -80,17 +80,34 @@ public class Configuration {
 	public void cleanup() {
 		LOGGER.info("Shutting down application - cleaning up resources");
 
+		disconnectHeosTelnetConnection();
+		disconnectDenonAvrTelnetConnection();
+
+		LOGGER.info("Cleanup completed");
+	}
+
+	private void disconnectDenonAvrTelnetConnection() {
+		if (denonAvrController != null) {
+			try {
+				LOGGER.debug("Closing Denon AVR Telnet connection");
+				denonAvrController.disconnect();
+				LOGGER.info("Denon AVR Telnet connection closed successfully");
+			} catch (Exception e) {
+				LOGGER.error("Error while closing Denon AVR Telnet connection", e);
+			}
+		}
+	}
+
+	private void disconnectHeosTelnetConnection() {
 		if (playerControllerTelnet != null) {
 			try {
-				LOGGER.debug("Closing Telnet connection");
-				playerControllerTelnet.close();
-				LOGGER.info("Telnet connection closed successfully");
+				LOGGER.debug("Closing HEOS CLI Telnet connection");
+				playerControllerTelnet.disconnect();
+				LOGGER.info("HEOS CLI Telnet connection closed successfully");
 			} catch (Exception e) {
 				LOGGER.error("Error while closing Telnet connection", e);
 			}
 		}
-
-		LOGGER.info("Cleanup completed");
 	}
 
 	private Properties getMobileDevicesProperties() {

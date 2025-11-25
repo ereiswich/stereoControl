@@ -26,7 +26,7 @@ class HeosPlayerController_TelnetTest {
 	public void tearDown() {
 		// Verbindung nach jedem Test sauber schließen
 		if (playerController != null) {
-			playerController.close();
+			playerController.disconnect();
 		}
 	}
 

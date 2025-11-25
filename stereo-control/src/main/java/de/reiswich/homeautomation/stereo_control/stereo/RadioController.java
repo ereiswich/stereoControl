@@ -95,12 +95,25 @@ public class RadioController implements IPhoneObserver {
 		LOGGER.info("playRadio command response: {}", heosCommandResponse);
 	}
 
+	private void stopRadioPlayer() {
+		LOGGER.info("try to stop RadioPlayer after {} Minutes.", radioControllerProperties.getRestartAfterMinutes());
+		try {
+			HeosCommandResponse heosCommandResponse = playerController.stopRadio(this.radioControllerProperties.getPlayerPid());
+			LOGGER.debug("stopRadio HEOS command response: {}", heosCommandResponse);
+
+			String avrResponse = denonAvrController.turnOffAvr();
+			LOGGER.debug("Turn Off command AVR response: {}", avrResponse);
+
+		} catch (Exception e) {
+			LOGGER.error("Failed to stop radio player   {}", e.getMessage());
+		}
+	}
+
 	/*
 	 * Stoppe radio nach 90 Minuten, damit es nicht die ganze Nacht durchläuft
 	 */
 	private void initStopPlayingAndRestartScanningTask() {
-		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask(playerController, denonAvrController, radioControllerProperties.getPlayerPid());
-
+		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask();
 		stopRadioPlaying.addObserver(this::initRestartScanning);
 
 		long minutesForRestartInMillis = TimeUnit.MINUTES.toMillis(radioControllerProperties.getRestartAfterMinutes());
@@ -119,6 +132,8 @@ public class RadioController implements IPhoneObserver {
 	 * person not at home) in range, thus restart scanning.
 	 */
 	private void initRestartScanning() {
+		this.stopRadioPlayer();
+
 		LOGGER.info("Initializing restart iPhone scanner task");
 		_restartIPhoneScannerTask = new DetectIPhoneTask(_mobileDevices);
 		_restartIPhoneScannerTask.addIPhoneObserver(new IPhoneObserver() {
