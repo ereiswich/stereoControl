@@ -25,6 +25,7 @@ public class StopRadioPlayingTask extends TimerTask {
 
 	@Override
 	public void run() {
+		LOGGER.debug("Stop Radio playing task executed. Informing observers.");
 		informObserver();
 	}
 

@@ -1,9 +1,17 @@
+
 // ssh key auf dem PI hinterlegen
 ssh-keygen -t rsa  
 ssh-copy-id pi@192.168.178.37
 
 // IP vom Raspberry rausfinden 
 ifconfig
+
+// Alias für SSH anlegen
+nano ~/.zshrc
+-- am Ende der Datei folgende Zeile ein:
+alias pi='ssh pi@192.168.178.37'
+source ~/.zshrc // lädt die Konfiguration neu
+pi //so startet man den SSH Zugang danach
 
 // File kopieren - aktuell über die POM.XML gelöst. 
 scp stereo-control-1.1.7.jar pi@192.168.178.37:/home/pi/projects/radioplay
