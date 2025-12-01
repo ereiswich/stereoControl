@@ -44,7 +44,7 @@ public class RadioController implements IPhoneObserver {
 	public void iPhoneDetected() {
 		LOGGER.info("\n \t >>> iPhone found. Check if it's time to play music.");
 		if (isTimeToPlayMusic()) {
-			LOGGER.info("Stop scanning and start playing radio");
+			LOGGER.info("Time to play music = true. Stop scanning and start playing radio");
 			stopScanning();
 			startRadioPlayer();
 			initStopPlayingAndRestartScanningTask();
@@ -87,7 +87,7 @@ public class RadioController implements IPhoneObserver {
 	private void startRadioPlayer() {
 		LOGGER.info("Switching on Denon AVR ...");
 		String response = denonAvrController.turnOnAvr();
-		LOGGER.debug("Turn on command response from Denon AVR: {}", response);
+		LOGGER.info("Turn on command response from Denon AVR: {}", response);
 
 		LOGGER.info("startRadioPlayer with HEOS-API and playerId: {}", this.radioControllerProperties.getPlayerPid());
 		HeosCommandResponse heosCommandResponse = playerController.playRadio(radioControllerProperties.getPlayerPid());
@@ -99,10 +99,10 @@ public class RadioController implements IPhoneObserver {
 		LOGGER.info("try to stop RadioPlayer after {} Minutes.", radioControllerProperties.getRestartAfterMinutes());
 		try {
 			HeosCommandResponse heosCommandResponse = playerController.stopRadio(this.radioControllerProperties.getPlayerPid());
-			LOGGER.debug("stopRadio HEOS command response: {}", heosCommandResponse);
+			LOGGER.info("stopRadio HEOS command response: {}", heosCommandResponse);
 
 			String avrResponse = denonAvrController.turnOffAvr();
-			LOGGER.debug("Turn Off command AVR response: {}", avrResponse);
+			LOGGER.info("Turn Off command AVR response: {}", avrResponse);
 
 		} catch (Exception e) {
 			LOGGER.error("Failed to stop radio player   {}", e.getMessage());
