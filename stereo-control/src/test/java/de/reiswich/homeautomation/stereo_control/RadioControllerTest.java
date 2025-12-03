@@ -18,10 +18,9 @@ import de.reiswich.homeautomation.stereo_control.stereo.RadioController;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class RadioControllerTest {
-	
+
 	@Autowired
 	private RadioController radioController;
-	
 
 	@Test
 	public void testIsTimeToPlay() {
@@ -50,10 +49,10 @@ public class RadioControllerTest {
 		}
 		return timeToPlay;
 	}
-	
+
 	@Test
-	public void iPhoneDetectedTest() throws InterruptedException {
-		 this.radioController.iPhoneDetected();
+	public void iPhoneDetectedTest() {
+		this.radioController.iPhoneDetected();
 	}
 
 }

@@ -35,7 +35,7 @@ public class DenonAvrController_TelnetTest {
 
 		// assert
 		assertThat(response).isNotEmpty();
-		assertThat(response).isEqualTo("PWSTANDBY", "Z2OFF");
+		assertThat(response).isIn("PWSTANDBY", "Z2OFF");
 	}
 
 }

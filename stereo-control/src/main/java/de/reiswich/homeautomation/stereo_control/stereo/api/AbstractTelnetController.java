@@ -55,7 +55,7 @@ public abstract class AbstractTelnetController {
 				if (response == null) {
 					// Verbindung wurde vom Server geschlossen
 					throw new IOException("Connection closed by server (readLine returned null)");
-				} else if (!expectedResponse.contains(response)) {
+				} else if (!expectedResponse.isEmpty() && !expectedResponse.contains(response)) {
 					LOGGER.debug("Unexpected response string: {}", response);
 					throw new IOException("Unexpected response: " + response);
 				}
