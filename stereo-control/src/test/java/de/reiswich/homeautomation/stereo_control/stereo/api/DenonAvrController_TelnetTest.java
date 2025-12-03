@@ -2,7 +2,6 @@ package de.reiswich.homeautomation.stereo_control.stereo.api;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,6 +24,7 @@ public class DenonAvrController_TelnetTest {
 
 		// assert
 		assertThat(response).isNotEmpty();
+		assertThat(response).isEqualTo("PWON");
 	}
 
 	@Test
@@ -34,7 +34,8 @@ public class DenonAvrController_TelnetTest {
 		String response = denonAvrController.turnOffAvr();
 
 		// assert
-		Assertions.assertThat(response).isNotEmpty();
+		assertThat(response).isNotEmpty();
+		assertThat(response).isEqualTo("PWSTANDBY", "Z2OFF");
 	}
 
 }
