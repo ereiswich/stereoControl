@@ -8,8 +8,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.commons.net.telnet.TelnetClient;
 import org.slf4j.Logger;
@@ -38,10 +36,6 @@ public abstract class AbstractTelnetController {
 	}
 
 	protected synchronized String sendCommand(String command) throws IOException {
-		return this.sendCommand(command, new ArrayList<>());
-	}
-
-	protected synchronized String sendCommand(String command, List<String> expectedResponse) throws IOException {
 		for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
 			try {
 				connect();
@@ -55,9 +49,6 @@ public abstract class AbstractTelnetController {
 				if (response == null) {
 					// Verbindung wurde vom Server geschlossen
 					throw new IOException("Connection closed by server (readLine returned null)");
-				} else if (!expectedResponse.isEmpty() && !expectedResponse.contains(response)) {
-					LOGGER.debug("Unexpected response string: {}", response);
-					throw new IOException("Unexpected response: " + response);
 				}
 
 				return response;
