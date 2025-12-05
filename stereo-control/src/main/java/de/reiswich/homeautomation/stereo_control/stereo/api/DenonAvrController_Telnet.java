@@ -19,7 +19,7 @@ public class DenonAvrController_Telnet extends AbstractTelnetController {
 
 	public String turnOffAvr() {
 		String command = "PWSTANDBY";
-		LOGGER.debug("Shutting off AVR Receiver");
+		LOGGER.debug("Switching off AVR Receiver");
 
 		try {
 			String result = sendCommand(command);
