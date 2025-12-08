@@ -3,8 +3,11 @@ package de.reiswich.homeautomation.stereo_control.stereo;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Properties;
-import java.util.Timer;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,107 +18,128 @@ import de.reiswich.homeautomation.stereo_control.stereo.api.DenonAvrController_T
 import de.reiswich.homeautomation.stereo_control.stereo.api.IPlayerController;
 import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosCommandResponse;
 
-public class RadioController {
-	private static final Logger LOGGER = LoggerFactory.getLogger(RadioController.class.getName());
+public class RadioController implements AutoCloseable {
+	private static final Logger LOGGER = LoggerFactory.getLogger(RadioController.class);
+	private static final ZoneId TIMEZONE_BERLIN = ZoneId.of("Europe/Berlin");
 
-	private volatile Timer _scanIPhoneTimer;
-	private volatile ScanIPhoneTask _scanIPhoneTask;
-	private volatile ScanIPhoneTask _restartIPhoneScannerTask;
-	private final Properties _mobileDevices;
+	private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(
+		r -> {
+			Thread thread = new Thread(r, "iPhone-Scanner-Thread");
+			thread.setDaemon(true);  // Daemon-Thread für sauberes Herunterfahren
+			return thread;
+		}
+	);
+
+	private volatile ScheduledFuture<?> currentScanTask;
+	private final Object lock = new Object();
+
+	private final Properties mobileDevices;
 	private final IPlayerController playerController;
 	private final DenonAvrController_Telnet denonAvrController;
 	private final RadioControllerProperties radioControllerProperties;
 
 	public RadioController(Properties props,
 		IPlayerController playerController,
-		DenonAvrController_Telnet denonAvrController, RadioControllerProperties radioControllerProperties) {
-		_mobileDevices = props;
+		DenonAvrController_Telnet denonAvrController,
+		RadioControllerProperties radioControllerProperties) {
+		this.mobileDevices = props;
 		this.playerController = playerController;
 		this.denonAvrController = denonAvrController;
 		this.radioControllerProperties = radioControllerProperties;
-		LOGGER.debug("RadioControllerproperties:  {}", radioControllerProperties);
+		LOGGER.debug("RadioControllerProperties: {}", radioControllerProperties);
 	}
 
 	public void init() {
-		startScanning(0);
+		startScanning();
 	}
 
-	private void stopScanning() {
-		// stop scanning
-		_scanIPhoneTask.cancel();
-		// remove scheduled "stop playing tasks" etc.
-		_scanIPhoneTimer.purge();
-	}
-
-	private void startScanning(long delay) {
-		_scanIPhoneTask = new ScanIPhoneTask(_mobileDevices);
-		_scanIPhoneTask.addIPhoneObserver(new IPhoneObserver() {
-			@Override
-			public void iPhoneDetected() {
-				LOGGER.info("\n \t >>> iPhone found, stop scanning task. Check if it's time to play music.");
-				stopScanning();
-
-				if (isTimeToPlayMusic()) {
-					LOGGER.info("Time to play music = true, start playing radio");
-					startRadioPlayer();
-					initStopPlayingAndRestartScanningTask();
-
-				} else {
-					LOGGER.info("Time to play music = false. Restart scanning.");
-					initRestartScanning();
-				}
-			}
-
-			@Override
-			public void iPhoneOffline() {
-				LOGGER.trace("iPhone connection lost.");
-			}
-		});
-
-		_scanIPhoneTimer = new Timer("iPhone Scanner");
-		// scan every x-seconds
-		long scanRateInMillis = TimeUnit.SECONDS.toMillis(radioControllerProperties.getScanRateInSec());
-		_scanIPhoneTimer.schedule(_scanIPhoneTask, delay, scanRateInMillis);
-		LOGGER.info("Initializing DetectIPhoneTask tasks with scan rate: {} seconds", radioControllerProperties.getScanRateInSec());
-	}
-
-	private void startRadioPlayer() {
-		LOGGER.info("Switching on Denon AVR ...");
-		String response = denonAvrController.turnOnAvr();
-		LOGGER.info("Turn on command response from Denon AVR: {}", response);
-
-		LOGGER.info("startRadioPlayer with HEOS-API and playerId: {}", this.radioControllerProperties.getPlayerPid());
-		HeosCommandResponse heosCommandResponse = playerController.playRadio(radioControllerProperties.getPlayerPid());
-
-		LOGGER.info("playRadio command response: {}", heosCommandResponse);
-	}
-
-	private void stopRadioPlayer() {
-		LOGGER.info("try to stop RadioPlayer after {} Minutes.", radioControllerProperties.getRestartAfterMinutes());
+	@Override
+	public void close() {
+		LOGGER.info("Shutting down RadioController...");
+		scheduler.shutdownNow();
 		try {
-			HeosCommandResponse heosCommandResponse = playerController.stopRadio(this.radioControllerProperties.getPlayerPid());
-			LOGGER.info("stopRadio HEOS command response: {}", heosCommandResponse);
-
-			// 08.12.2025: nervt doch zu doll beim TV gucken, wenn dieser ausgeschaltet wird.
-			// String avrResponse = denonAvrController.turnOffAvr();
-			//LOGGER.info("Turn Off command AVR response: {}", avrResponse);
-
-		} catch (Exception e) {
-			LOGGER.error("Failed to stop radio player   {}", e.getMessage());
+			if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+				LOGGER.warn("Scheduler did not terminate within timeout");
+			}
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			LOGGER.warn("Interrupted while waiting for scheduler shutdown");
 		}
 	}
 
-	/*
-	 * Stoppe radio nach 90 Minuten, damit es nicht die ganze Nacht durchläuft und starte scanning task.
-	 */
-	private void initStopPlayingAndRestartScanningTask() {
-		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask();
-		stopRadioPlaying.addObserver(this::initRestartScanning);
+	private void cancelCurrentTask() {
+		synchronized (lock) {
+			if (currentScanTask != null) {
+				currentScanTask.cancel(false);
+				currentScanTask = null;
+			}
+		}
+	}
 
-		long minutesForRestartInMillis = TimeUnit.MINUTES.toMillis(radioControllerProperties.getRestartAfterMinutes());
-		_scanIPhoneTimer.schedule(stopRadioPlaying, minutesForRestartInMillis);
-		// // 60 Min.
-		LOGGER.info("Stop playing radio timer initialized after: {} Min.", radioControllerProperties.getRestartAfterMinutes());
+	private void scheduleScanTask(Runnable task) {
+		long scanRateInSec = radioControllerProperties.getScanRateInSec();
+		synchronized (lock) {
+			currentScanTask = scheduler.scheduleAtFixedRate(
+				task, 0, scanRateInSec, TimeUnit.SECONDS
+			);
+		}
+		LOGGER.info("iPhone-Scanner initialisiert mit Scan-Rate: {} Sekunden", scanRateInSec);
+	}
+
+	private void startScanning() {
+		ScanIPhoneTask scanTask = new ScanIPhoneTask(mobileDevices);
+		scanTask.addIPhoneObserver(new InitialScanObserver());
+		scheduleScanTask(scanTask);
+	}
+
+	private void startRadioPlayer() {
+		LOGGER.info("Schalte Denon AVR ein...");
+		String response = denonAvrController.turnOnAvr();
+		LOGGER.info("Denon AVR Einschalt-Antwort: {}", response);
+
+		int playerPid = radioControllerProperties.getPlayerPid();
+		LOGGER.info("Starte Radio über HEOS-API mit Player-ID: {}", playerPid);
+		HeosCommandResponse heosResponse = playerController.playRadio(playerPid);
+		LOGGER.info("HEOS playRadio Antwort: {}", heosResponse);
+	}
+
+	private void stopRadioPlayer() {
+		LOGGER.info("Stoppe Radio-Player...");
+		try {
+			HeosCommandResponse heosResponse = playerController.stopRadio(radioControllerProperties.getPlayerPid());
+			LOGGER.info("HEOS stopRadio Antwort: {}", heosResponse);
+		} catch (Exception e) {
+			LOGGER.error("Fehler beim Stoppen des Radio-Players: {}", e.getMessage(), e);
+		}
+	}
+
+	private void scheduleStopPlayingAndRestartScanning() {
+		long restartMinutes = radioControllerProperties.getRestartAfterMinutes();
+		scheduler.schedule(() -> {
+			stopRadioPlayer();
+			initRestartScanning();
+		}, restartMinutes, TimeUnit.MINUTES);
+		LOGGER.info("Radio-Stop Timer initialisiert: {} Minuten", restartMinutes);
+	}
+
+	private void initRestartScanning() {
+		LOGGER.info("Initialisiere Restart-Scanner alle {} Sekunden",
+			radioControllerProperties.getScanRateInSec());
+
+		ScanIPhoneTask restartTask = new ScanIPhoneTask(mobileDevices);
+		restartTask.addIPhoneObserver(new RestartScanObserver());
+		scheduleScanTask(restartTask);
+	}
+
+	protected boolean isTimeToPlayMusic() {
+		int currentHour = LocalTime.now(TIMEZONE_BERLIN).getHour();
+		int startTime = radioControllerProperties.getStartTimeToPlayMusic();
+		int endTime = radioControllerProperties.getEndTimeToPlayMusic();
+
+		boolean timeToPlay = currentHour >= startTime && currentHour < endTime;
+		LOGGER.debug("Zeit zum Musik abspielen: {} (aktuelle Stunde: {}, erlaubt: {} - {})",
+			timeToPlay, currentHour, startTime, endTime);
+		return timeToPlay;
 	}
 
 	@Override
@@ -123,62 +147,49 @@ public class RadioController {
 		return RadioController.class.getSimpleName();
 	}
 
-	/*
-	 * As soon as iPhone connection is lost, the bluetooth device is no longer (=
-	 * person not at home) in range, thus restart scanning.
-	 */
-	private void initRestartScanning() {
-		this.stopRadioPlayer();
+	private class InitialScanObserver implements IPhoneObserver {
+		@Override
+		public void iPhoneDetected() {
+			LOGGER.info("iPhone gefunden, stoppe Scan-Task. Prüfe ob Zeit zum Musik abspielen ist.");
+			cancelCurrentTask();
 
-		LOGGER.info("Initializing restart iPhone scanner task every '{}' seconds", radioControllerProperties.getScanRateInSec());
-		_restartIPhoneScannerTask = new ScanIPhoneTask(_mobileDevices);
-		_restartIPhoneScannerTask.addIPhoneObserver(new IPhoneObserver() {
-			int pingFailedCounter = 0;
-
-			@Override
-			public void iPhoneOffline() {
-				pingFailedCounter++;
-				LOGGER.debug("iPhone connection lost. Setting ping failed counter to: {}", pingFailedCounter);
-				/*
-				 * Ping may fail. Don't restart iPhone scanner immediately. Failing e.g. ten
-				 * times is more unlikely, thus iPhone is truly out of range.
-				 */
-				if (pingFailedCounter >= radioControllerProperties.getPingFailCounter()) {
-					LOGGER.info("Ping failed counter >= {}, smartPhone truly out of range. \n Start scanning iPhone.", radioControllerProperties.getPingFailCounter());
-					_restartIPhoneScannerTask.cancel();
-					startScanning(0);
-				}
+			if (isTimeToPlayMusic()) {
+				LOGGER.info("Zeit zum Musik abspielen = true, starte Radio");
+				startRadioPlayer();
+				scheduleStopPlayingAndRestartScanning();
+			} else {
+				LOGGER.info("Zeit zum Musik abspielen = false. Starte Scanning neu.");
+				initRestartScanning();
 			}
+		}
 
-			@Override
-			public void iPhoneDetected() {
-				// reset counter
-				pingFailedCounter = 0;
-				LOGGER.debug(
-					"iPhone detected: reset ping failed counter");
-				// nothing to do
-			}
-
-			@Override
-			public String toString() {
-				return "restart iPhone scanner task";
-			}
-		});
-
-		long scanForMobileDeviceEachMillis = TimeUnit.SECONDS.toMillis(radioControllerProperties.getScanRateInSec());
-		_scanIPhoneTimer.schedule(_restartIPhoneScannerTask, 0, scanForMobileDeviceEachMillis);
+		@Override
+		public void iPhoneOffline() {
+			LOGGER.trace("iPhone nicht erreichbar.");
+		}
 	}
 
-	protected boolean isTimeToPlayMusic() {
-		boolean timeToPlay = false;
-		int currentHour = LocalTime.now(ZoneId.of("Europe/Berlin")).getHour();
-		// don't play at night (had too many sleepless nights)
-		int startTime = radioControllerProperties.getStartTimeToPlayMusic();
-		int endTime = radioControllerProperties.getEndTimeToPlayMusic();
-		if (currentHour >= startTime && currentHour < endTime) {
-			timeToPlay = true;
+	private class RestartScanObserver implements IPhoneObserver {
+		private final AtomicInteger pingFailedCounter = new AtomicInteger(0);
+		private final int maxPingFails = radioControllerProperties.getPingFailCounter();
+
+		@Override
+		public void iPhoneOffline() {
+			int failCount = pingFailedCounter.incrementAndGet();
+			LOGGER.debug("iPhone offline. Ping fail counter: {}", failCount);
+
+			if (failCount >= maxPingFails) {
+				LOGGER.info("Ping fail counter >= {}. Smartphone außer Reichweite, starte scanning neu.",
+					maxPingFails);
+				cancelCurrentTask();
+				startScanning();
+			}
 		}
-		LOGGER.debug("Time to play music: {} -> (current hour of day: {} >= {} && {} <= {})", timeToPlay, currentHour, startTime, currentHour, endTime);
-		return timeToPlay;
+
+		@Override
+		public void iPhoneDetected() {
+			pingFailedCounter.set(0);
+			LOGGER.trace("iPhone erkannt: Ping fail counter zurückgesetzt");
+		}
 	}
 }

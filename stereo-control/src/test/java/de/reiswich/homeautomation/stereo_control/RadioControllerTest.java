@@ -50,9 +50,4 @@ public class RadioControllerTest {
 		return timeToPlay;
 	}
 
-	@Test
-	public void iPhoneDetectedTest() {
-		this.radioController.iPhoneDetected();
-	}
-
 }

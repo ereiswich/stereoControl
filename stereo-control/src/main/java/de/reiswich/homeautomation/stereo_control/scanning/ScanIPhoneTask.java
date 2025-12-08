@@ -2,116 +2,103 @@ package de.reiswich.homeautomation.stereo_control.scanning;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map.Entry;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.Set;
-import java.util.TimerTask;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Ping the iPhone each x minutes. After it finds the iPhone, observers are
- * informed.
- *
- * @author ereiswich
- *
+ * Pingt mobile Geräte regelmäßig via Bluetooth an.
+ * Informiert Observer, wenn ein Gerät gefunden oder nicht gefunden wird.
  */
-public class ScanIPhoneTask extends TimerTask {
-	private Logger logger = LoggerFactory.getLogger(ScanIPhoneTask.class.getName());
+public class ScanIPhoneTask implements Runnable {
 
-	private Set<IPhoneObserver> iPhoneObserver = new HashSet<IPhoneObserver>();
+	private static final Logger LOGGER = LoggerFactory.getLogger(ScanIPhoneTask.class);
+	private static final int PING_TIMEOUT_SECONDS = 10;
 
-	private Properties _mobileDevices;
+	private final Set<IPhoneObserver> observers = new CopyOnWriteArraySet<>();
+	private final Properties mobileDevices;
 
 	public ScanIPhoneTask(Properties mobileDevices) {
-		_mobileDevices = mobileDevices;
+		this.mobileDevices = mobileDevices;
 	}
 
 	public void addIPhoneObserver(IPhoneObserver observer) {
-		iPhoneObserver.add(observer);
+		observers.add(observer);
 	}
 
 	@Override
 	public void run() {
-		logger.debug("Running Scan IPhones task...");
-		List<Boolean> pingResults = new ArrayList<>();
-		for (Entry<Object, Object> deviceKeySet : _mobileDevices.entrySet()) {
-			boolean pingResult = pingMobileDevice((String) deviceKeySet.getKey(), (String) deviceKeySet.getValue());
-			pingResults.add(pingResult);
-		}
+		LOGGER.debug("Starte iPhone-Scan...");
 
-		boolean iPhoneDetected = pingResults.contains(true);
+		boolean anyDeviceDetected = mobileDevices.stringPropertyNames().stream()
+			.anyMatch(deviceOwner -> pingMobileDevice(
+				deviceOwner,
+				mobileDevices.getProperty(deviceOwner)
+			));
 
-		if (iPhoneDetected) {
-			handleIPhoneOnline();
+		if (anyDeviceDetected) {
+			notifyIPhoneOnline();
 		} else {
-			handleIPhoneOffline();
+			notifyIPhoneOffline();
 		}
 	}
 
-	private boolean pingMobileDevice(String mobileDeviceOwner, String deviceMacAdress) {
-		boolean pingResult = false;
+	private boolean pingMobileDevice(String deviceOwner, String macAddress) {
 		Process process = null;
 		try {
-			// Bluetooth-MAC-Adresse ist die richtige
-			// String l2PingString = "sudo l2ping -c 1 " + deviceMacAdress;
-			String hciToolPingString = "sudo hcitool name " + deviceMacAdress;
-			process = Runtime.getRuntime().exec(hciToolPingString);
-			boolean finished = process.waitFor(10, TimeUnit.SECONDS);
-			if (finished) {
-				try (InputStream in = process.getInputStream()) {
-					InputStreamReader inReader = new InputStreamReader(in);
-					BufferedReader bufReader = new BufferedReader(inReader);
+			String command = "sudo hcitool name " + macAddress;
+			process = Runtime.getRuntime().exec(command);
 
-					String line = bufReader.readLine();
-					if (line != null && !line.isEmpty()) {
-						pingResult = true;
-						logger.debug("Mobile device for owner: {} detected", mobileDeviceOwner);
-					} else {
-						logger.debug("Ping for mobile device owner: {} return line is: {} ", mobileDeviceOwner, line);
-					}
+			boolean finished = process.waitFor(PING_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+			if (!finished) {
+				LOGGER.warn("Ping-Timeout für Gerät: {}", deviceOwner);
+				return false;
+			}
+
+			try (BufferedReader reader = new BufferedReader(
+				new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+				String line = reader.readLine();
+				if (line != null && !line.isEmpty()) {
+					LOGGER.debug("Gerät von {} erkannt", deviceOwner);
+					return true;
 				}
-
-			} else {
-				logger.warn("Ping timeout for device: " + mobileDeviceOwner);
-				process.destroyForcibly();
+				LOGGER.debug("Keine Antwort für Gerät von {}", deviceOwner);
+				return false;
 			}
 
-		} catch (IOException | InterruptedException e) {
-			logger.error(e.getMessage());
-			if (e instanceof InterruptedException) {
-				Thread.currentThread().interrupt();
-			}
+		} catch (IOException e) {
+			LOGGER.error("IO-Fehler beim Ping: {}", e.getMessage());
+			return false;
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			LOGGER.warn("Ping unterbrochen für Gerät: {}", deviceOwner);
+			return false;
 		} finally {
 			if (process != null) {
 				process.destroyForcibly();
 			}
 		}
-		return pingResult;
 	}
 
-	private void handleIPhoneOnline() {
-		for (IPhoneObserver observer : iPhoneObserver) {
-			logger.debug("Inform observer iPhone found: " + observer.toString());
+	private void notifyIPhoneOnline() {
+		observers.forEach(observer -> {
+			LOGGER.debug("Informiere Observer über iPhone-Fund: {}", observer);
 			observer.iPhoneDetected();
-		}
+		});
 	}
 
-	private void handleIPhoneOffline() {
-		for (IPhoneObserver observer : iPhoneObserver) {
-			observer.iPhoneOffline();
-		}
+	private void notifyIPhoneOffline() {
+		observers.forEach(IPhoneObserver::iPhoneOffline);
 	}
 
 	@Override
 	public String toString() {
-		return "Detect iPhone scanner task";
+		return "ScanIPhoneTask";
 	}
 }

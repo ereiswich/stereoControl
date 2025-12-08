@@ -31,14 +31,14 @@ public class DenonAvrController_Telnet extends AbstractTelnetController {
 			return result;
 
 		} catch (IOException e) {
-			LOGGER.error("Error shutting off Denon AVR: {}", e.getMessage(), e);
+			LOGGER.error("Error switching off Denon AVR: {}", e.getMessage(), e);
 			return null;
 		}
 	}
 
 	public String turnOnAvr() {
 		String command = "PWON";
-		LOGGER.debug("Shutting on AVR Receiver");
+		LOGGER.debug("Turning on AVR Receiver");
 		try {
 			String result = sendCommand(command);
 			// Denon schickt normalerweise als result den Command als String zurück
@@ -49,7 +49,7 @@ public class DenonAvrController_Telnet extends AbstractTelnetController {
 			return result;
 
 		} catch (IOException e) {
-			LOGGER.error("Error shutting on Denon AVR: {}", e.getMessage(), e);
+			LOGGER.error("Error turning on Denon AVR: {}", e.getMessage(), e);
 			return null;
 		}
 	}
