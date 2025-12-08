@@ -25,7 +25,7 @@ public class RadioController {
 	private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(
 		r -> {
 			Thread thread = new Thread(r, "iPhone-Scanner-Thread");
-			thread.setDaemon(true);  // Daemon-Thread für sauberes Herunterfahren
+			thread.setDaemon(false);  // damit Threads nicht automatisch beendet werden
 			return thread;
 		}
 	);
