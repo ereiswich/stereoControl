@@ -18,7 +18,7 @@ import de.reiswich.homeautomation.stereo_control.stereo.api.DenonAvrController_T
 import de.reiswich.homeautomation.stereo_control.stereo.api.IPlayerController;
 import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosCommandResponse;
 
-public class RadioController implements AutoCloseable {
+public class RadioController {
 	private static final Logger LOGGER = LoggerFactory.getLogger(RadioController.class);
 	private static final ZoneId TIMEZONE_BERLIN = ZoneId.of("Europe/Berlin");
 
@@ -51,20 +51,6 @@ public class RadioController implements AutoCloseable {
 
 	public void init() {
 		startScanning();
-	}
-
-	@Override
-	public void close() {
-		LOGGER.info("Shutting down RadioController...");
-		scheduler.shutdownNow();
-		try {
-			if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
-				LOGGER.warn("Scheduler did not terminate within timeout");
-			}
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			LOGGER.warn("Interrupted while waiting for scheduler shutdown");
-		}
 	}
 
 	private void cancelCurrentTask() {
