@@ -37,7 +37,8 @@ public class DenonAvrController_Telnet extends AbstractTelnetController {
 	}
 
 	public String turnOnAvr() {
-		String command = "PWON";
+		// PWON schaltet alle zonen ein, ZMON nur die Main zone
+		String command = "ZMON";
 		LOGGER.debug("Turning on AVR Receiver");
 		try {
 			String result = sendCommand(command);

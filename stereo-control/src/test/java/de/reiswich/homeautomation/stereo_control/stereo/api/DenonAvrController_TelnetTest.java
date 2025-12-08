@@ -3,12 +3,11 @@ package de.reiswich.homeautomation.stereo_control.stereo.api;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 // Dieser Test läuft manchmal unendlich lang, daher ist er deaktiviert
-@Disabled
+//@Disabled
 @SpringBootTest
 public class DenonAvrController_TelnetTest {
 
@@ -20,7 +19,7 @@ public class DenonAvrController_TelnetTest {
 	}
 
 	@Test
-	void turnOnAvr_shouldSendCommandPWON() {
+	void turnOnAvr_shouldSendCommandTurnOnAvr() {
 
 		// Act
 		String response = denonAvrController.turnOnAvr();
