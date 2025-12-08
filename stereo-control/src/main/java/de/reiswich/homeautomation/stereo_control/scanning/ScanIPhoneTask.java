@@ -23,14 +23,14 @@ import org.slf4j.LoggerFactory;
  * @author ereiswich
  *
  */
-public class DetectIPhoneTask extends TimerTask {
-	private Logger logger = LoggerFactory.getLogger(DetectIPhoneTask.class.getName());
+public class ScanIPhoneTask extends TimerTask {
+	private Logger logger = LoggerFactory.getLogger(ScanIPhoneTask.class.getName());
 
 	private Set<IPhoneObserver> iPhoneObserver = new HashSet<IPhoneObserver>();
 
 	private Properties _mobileDevices;
 
-	public DetectIPhoneTask(Properties mobileDevices) {
+	public ScanIPhoneTask(Properties mobileDevices) {
 		_mobileDevices = mobileDevices;
 	}
 
@@ -69,7 +69,7 @@ public class DetectIPhoneTask extends TimerTask {
 				try (InputStream in = process.getInputStream()) {
 					InputStreamReader inReader = new InputStreamReader(in);
 					BufferedReader bufReader = new BufferedReader(inReader);
- 
+
 					String line = bufReader.readLine();
 					if (line != null && !line.isEmpty()) {
 						pingResult = true;
@@ -90,7 +90,7 @@ public class DetectIPhoneTask extends TimerTask {
 				Thread.currentThread().interrupt();
 			}
 		} finally {
-			if (process != null && process.isAlive()) {
+			if (process != null) {
 				process.destroyForcibly();
 			}
 		}

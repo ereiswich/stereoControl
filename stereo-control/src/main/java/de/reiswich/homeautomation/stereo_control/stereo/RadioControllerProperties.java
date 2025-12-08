@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 public class RadioControllerProperties {
 	private long restartScanTaskAfterMinutes;
 	private int pingFailCounter;
-	private int scanForDevicesInMinutes;
 	private int startTimeToPlayMusic;
 	private int endTimeToPlayMusic;
 	private int scanRateInSec;
@@ -28,14 +27,6 @@ public class RadioControllerProperties {
 
 	public void setPingFailCounter(int pingFailCounter) {
 		this.pingFailCounter = pingFailCounter;
-	}
-
-	public int getScanForDevicesInMinutes() {
-		return scanForDevicesInMinutes;
-	}
-
-	public void setScanForDevicesInMinutes(int scanForDevicesInMinutes) {
-		this.scanForDevicesInMinutes = scanForDevicesInMinutes;
 	}
 
 	public int getStartTimeToPlayMusic() {
@@ -74,7 +65,6 @@ public class RadioControllerProperties {
 		return "RadioControllerProperties{" +
 			"restartAfterMinutes=" + restartScanTaskAfterMinutes +
 			", pingFailCounter=" + pingFailCounter +
-			", scanForDevicesInMinutes=" + scanForDevicesInMinutes +
 			", startTimeToPlayMusic=" + startTimeToPlayMusic +
 			", endTimeToPlayMusic=" + endTimeToPlayMusic +
 			", scanRateInSec=" + scanRateInSec +

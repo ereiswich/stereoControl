@@ -9,19 +9,19 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.reiswich.homeautomation.stereo_control.scanning.DetectIPhoneTask;
 import de.reiswich.homeautomation.stereo_control.scanning.IPhoneObserver;
+import de.reiswich.homeautomation.stereo_control.scanning.ScanIPhoneTask;
 import de.reiswich.homeautomation.stereo_control.stereo.api.DenonAvrController_Telnet;
 import de.reiswich.homeautomation.stereo_control.stereo.api.IPlayerController;
 import de.reiswich.homeautomation.stereo_control.stereo.api.dto.HeosCommandResponse;
 
-public class RadioController implements IPhoneObserver {
-	private Logger LOGGER = LoggerFactory.getLogger(RadioController.class.getName());
+public class RadioController {
+	private static final Logger LOGGER = LoggerFactory.getLogger(RadioController.class.getName());
 
-	private Timer _scanIPhoneTimer;
-	private DetectIPhoneTask _scanIPhoneTask;
-	private DetectIPhoneTask _restartIPhoneScannerTask;
-	private Properties _mobileDevices;
+	private volatile Timer _scanIPhoneTimer;
+	private volatile ScanIPhoneTask _scanIPhoneTask;
+	private volatile ScanIPhoneTask _restartIPhoneScannerTask;
+	private final Properties _mobileDevices;
 	private final IPlayerController playerController;
 	private final DenonAvrController_Telnet denonAvrController;
 	private final RadioControllerProperties radioControllerProperties;
@@ -40,27 +40,6 @@ public class RadioController implements IPhoneObserver {
 		startScanning(0);
 	}
 
-	@Override
-	public void iPhoneDetected() {
-		LOGGER.info("\n \t >>> iPhone found. Check if it's time to play music.");
-		if (isTimeToPlayMusic()) {
-			LOGGER.info("Time to play music = true. Stop scanning and start playing radio");
-			stopScanning();
-			startRadioPlayer();
-			initStopPlayingAndRestartScanningTask();
-
-		} else {
-			LOGGER.info("Time to play music = false. Restart scanning.");
-			/*
-			 * Arrived home too late. restart scanning task, otherwise the music will start
-			 * to play as soon as: isTimeToPlayMusic() returns true, although you are at
-			 * home and playing music is not necessary.
-			 */
-			stopScanning();
-			initRestartScanning();
-		}
-	}
-
 	private void stopScanning() {
 		// stop scanning
 		_scanIPhoneTask.cancel();
@@ -68,14 +47,30 @@ public class RadioController implements IPhoneObserver {
 		_scanIPhoneTimer.purge();
 	}
 
-	@Override
-	public void iPhoneOffline() {
-		// logger.debug("iPhone connection lost.");
-	}
-
 	private void startScanning(long delay) {
-		_scanIPhoneTask = new DetectIPhoneTask(_mobileDevices);
-		_scanIPhoneTask.addIPhoneObserver(this);
+		_scanIPhoneTask = new ScanIPhoneTask(_mobileDevices);
+		_scanIPhoneTask.addIPhoneObserver(new IPhoneObserver() {
+			@Override
+			public void iPhoneDetected() {
+				LOGGER.info("\n \t >>> iPhone found, stop scanning task. Check if it's time to play music.");
+				stopScanning();
+
+				if (isTimeToPlayMusic()) {
+					LOGGER.info("Time to play music = true, start playing radio");
+					startRadioPlayer();
+					initStopPlayingAndRestartScanningTask();
+
+				} else {
+					LOGGER.info("Time to play music = false. Restart scanning.");
+					initRestartScanning();
+				}
+			}
+
+			@Override
+			public void iPhoneOffline() {
+				LOGGER.trace("iPhone connection lost.");
+			}
+		});
 
 		_scanIPhoneTimer = new Timer("iPhone Scanner");
 		// scan every x-seconds
@@ -101,8 +96,9 @@ public class RadioController implements IPhoneObserver {
 			HeosCommandResponse heosCommandResponse = playerController.stopRadio(this.radioControllerProperties.getPlayerPid());
 			LOGGER.info("stopRadio HEOS command response: {}", heosCommandResponse);
 
-			String avrResponse = denonAvrController.turnOffAvr();
-			LOGGER.info("Turn Off command AVR response: {}", avrResponse);
+			// 08.12.2025: nervt doch zu doll beim TV gucken, wenn dieser ausgeschaltet wird.
+			// String avrResponse = denonAvrController.turnOffAvr();
+			//LOGGER.info("Turn Off command AVR response: {}", avrResponse);
 
 		} catch (Exception e) {
 			LOGGER.error("Failed to stop radio player   {}", e.getMessage());
@@ -110,7 +106,7 @@ public class RadioController implements IPhoneObserver {
 	}
 
 	/*
-	 * Stoppe radio nach 90 Minuten, damit es nicht die ganze Nacht durchläuft
+	 * Stoppe radio nach 90 Minuten, damit es nicht die ganze Nacht durchläuft und starte scanning task.
 	 */
 	private void initStopPlayingAndRestartScanningTask() {
 		StopRadioPlayingTask stopRadioPlaying = new StopRadioPlayingTask();
@@ -134,23 +130,21 @@ public class RadioController implements IPhoneObserver {
 	private void initRestartScanning() {
 		this.stopRadioPlayer();
 
-		LOGGER.info("Initializing restart iPhone scanner task");
-		_restartIPhoneScannerTask = new DetectIPhoneTask(_mobileDevices);
+		LOGGER.info("Initializing restart iPhone scanner task every '{}' seconds", radioControllerProperties.getScanRateInSec());
+		_restartIPhoneScannerTask = new ScanIPhoneTask(_mobileDevices);
 		_restartIPhoneScannerTask.addIPhoneObserver(new IPhoneObserver() {
 			int pingFailedCounter = 0;
 
 			@Override
 			public void iPhoneOffline() {
 				pingFailedCounter++;
-				LOGGER.debug("iPhone connection lost. Setting ping failed counter to: " + pingFailedCounter);
+				LOGGER.debug("iPhone connection lost. Setting ping failed counter to: {}", pingFailedCounter);
 				/*
 				 * Ping may fail. Don't restart iPhone scanner immediately. Failing e.g. ten
 				 * times is more unlikely, thus iPhone is truly out of range.
 				 */
 				if (pingFailedCounter >= radioControllerProperties.getPingFailCounter()) {
-					LOGGER.info(
-						"Ping failed counter >= " + radioControllerProperties.getPingFailCounter() + ", smartPhone truly out of range. "
-							+ "\n Start scanning iPhone.");
+					LOGGER.info("Ping failed counter >= {}, smartPhone truly out of range. \n Start scanning iPhone.", radioControllerProperties.getPingFailCounter());
 					_restartIPhoneScannerTask.cancel();
 					startScanning(0);
 				}
@@ -161,7 +155,7 @@ public class RadioController implements IPhoneObserver {
 				// reset counter
 				pingFailedCounter = 0;
 				LOGGER.debug(
-					"iPhone detected: 1. reset ping failed counter \n 2. nothing to do, iPhone is in range and connected");
+					"iPhone detected: reset ping failed counter");
 				// nothing to do
 			}
 
@@ -171,7 +165,7 @@ public class RadioController implements IPhoneObserver {
 			}
 		});
 
-		long scanForMobileDeviceEachMillis = TimeUnit.MINUTES.toMillis(radioControllerProperties.getScanForDevicesInMinutes());
+		long scanForMobileDeviceEachMillis = TimeUnit.SECONDS.toMillis(radioControllerProperties.getScanRateInSec());
 		_scanIPhoneTimer.schedule(_restartIPhoneScannerTask, 0, scanForMobileDeviceEachMillis);
 	}
 
